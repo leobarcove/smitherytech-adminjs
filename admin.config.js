@@ -3,6 +3,13 @@ import AdminJS from "adminjs";
 import { Database, Resource, getModelByName } from "@adminjs/prisma";
 import { PrismaClient } from "@prisma/client";
 import { dashboardHandler } from "./dashboard-handler.js";
+import { ComponentLoader } from "adminjs";
+
+const componentLoader = new ComponentLoader();
+
+const Components = {
+  ConversationView: componentLoader.add("ConversationView", "./components/conversation-view.jsx"),
+};
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -11,6 +18,7 @@ const dmmf = prisma._baseDmmf || prisma._dmmf;
 
 const adminOptions = {
   rootPath: "/admin",
+  componentLoader,
   dashboard: {
     handler: dashboardHandler,
   },
@@ -128,28 +136,15 @@ const adminOptions = {
           "last_interaction",
         ],
         actions: {
-          show: {
-            before: async (request, context) => {
-              const { record } = context;
-              if (record) {
-                const sessionId = record.id();
-                // Redirect will be handled by Express route
-                return request;
-              }
-              return request;
-            },
-          },
           viewMessages: {
             actionType: "record",
-            icon: "MessageCircle",
+            icon: "MessageSquare",
             label: "View Messages",
-            component: false,
+            component: Components.ConversationView,
+            showInDrawer: false,
             handler: async (request, response, context) => {
-              const { record } = context;
-              const sessionId = record.id();
               return {
-                record: record.toJSON(context.currentAdmin),
-                redirectUrl: `/admin/conversations/${sessionId}/view`,
+                record: context.record.toJSON(context.currentAdmin),
               };
             },
           },
