@@ -172,8 +172,20 @@ const ConversationView = (props) => {
         ) : (
           <Box flex flexDirection="column" style={{ gap: '12px' }}>
             {messages.map((message, index) => {
-              const isBot = message.sender_type === 'bot';
-              const isUser = message.sender_type === 'user';
+              const isBot = message.role === 'assistant' || message.role === 'system';
+              const isUser = message.role === 'user';
+
+              // Parse message content if it's JSON
+              let messageContent = message.content;
+              try {
+                const parsed = JSON.parse(message.content);
+                if (parsed.message) {
+                  messageContent = parsed.message;
+                }
+              } catch (e) {
+                // If parsing fails, use content as is
+                messageContent = message.content;
+              }
 
               return (
                 <Box
@@ -201,7 +213,7 @@ const ConversationView = (props) => {
                         whiteSpace: 'pre-wrap',
                       }}
                     >
-                      {message.content}
+                      {messageContent}
                     </Text>
 
                     {/* Timestamp */}
