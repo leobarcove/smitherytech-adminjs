@@ -8,7 +8,10 @@ import { ComponentLoader } from "adminjs";
 const componentLoader = new ComponentLoader();
 
 const Components = {
-  ConversationView: componentLoader.add("ConversationView", "./components/conversation-view.jsx"),
+  ConversationView: componentLoader.add(
+    "ConversationView",
+    "./components/conversation-view.jsx"
+  ),
 };
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -73,7 +76,7 @@ const adminOptions = {
       },
       options: {
         navigation: {
-          name: "Claims Management",
+          name: "InsuraWiz",
           icon: "FileText",
         },
       },
@@ -86,7 +89,7 @@ const adminOptions = {
       },
       options: {
         navigation: {
-          name: "Claims Management",
+          name: "InsuraWiz",
           icon: "Shield",
         },
       },
@@ -99,21 +102,8 @@ const adminOptions = {
       },
       options: {
         navigation: {
-          name: "Claims Management",
+          name: "InsuraWiz",
           icon: "File",
-        },
-      },
-    },
-    {
-      resource: {
-        model: getModelByName("status_updates"),
-        client: prisma,
-        dmmf,
-      },
-      options: {
-        navigation: {
-          name: "Claims Management",
-          icon: "Activity",
         },
       },
     },
@@ -125,7 +115,7 @@ const adminOptions = {
       },
       options: {
         navigation: {
-          name: "Conversations",
+          name: "InsuraWiz",
           icon: "MessageSquare",
         },
         listProperties: [
@@ -151,6 +141,20 @@ const adminOptions = {
         },
       },
     },
+    {
+      resource: {
+        model: getModelByName("status_updates"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "InsuraWiz",
+          icon: "Activity",
+        },
+      },
+    },
+
     {
       resource: {
         model: getModelByName("messages"),
