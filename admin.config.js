@@ -2,6 +2,7 @@ import 'dotenv/config';
 import AdminJS from 'adminjs';
 import { Database, Resource, getModelByName } from '@adminjs/prisma';
 import { PrismaClient } from '@prisma/client';
+import { dashboardHandler } from './dashboard-handler.js';
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -10,6 +11,9 @@ const dmmf = (prisma._baseDmmf || prisma._dmmf);
 
 const adminOptions = {
   rootPath: '/admin',
+  dashboard: {
+    handler: dashboardHandler,
+  },
   branding: {
     companyName: 'Smithery Tech Admin',
     logo: false,
@@ -20,6 +24,10 @@ const adminOptions = {
     {
       resource: { model: getModelByName('Admin'), client: prisma, dmmf },
       options: {
+        navigation: {
+          name: 'System',
+          icon: 'User',
+        },
         properties: {
           password: {
             type: 'password',
@@ -92,15 +100,29 @@ const adminOptions = {
           name: 'Conversations',
           icon: 'MessageSquare',
         },
+        listProperties: ['id', 'telegram_chat_id', 'current_state', 'created_at', 'last_interaction'],
+        actions: {
+          viewMessages: {
+            actionType: 'record',
+            icon: 'MessageCircle',
+            label: 'View Messages',
+            isVisible: true,
+            handler: async (request, response, context) => {
+              const { record } = context;
+              const sessionId = record.id();
+              return {
+                record: record.toJSON(context.currentAdmin),
+                redirectUrl: `/admin/conversations/${sessionId}/view`,
+              };
+            },
+          },
+        },
       },
     },
     {
       resource: { model: getModelByName('messages'), client: prisma, dmmf },
       options: {
-        navigation: {
-          name: 'Conversations',
-          icon: 'MessageCircle',
-        },
+        navigation: false,
       },
     },
     {
