@@ -172,19 +172,35 @@ const ConversationView = (props) => {
         ) : (
           <Box flex flexDirection="column" style={{ gap: '12px' }}>
             {messages.map((message, index) => {
-              const isBot = message.role === 'assistant' || message.role === 'system';
-              const isUser = message.role === 'user';
-
-              // Parse message content if it's JSON
+              // Determine if message is from bot and extract content
               let messageContent = message.content;
-              try {
-                const parsed = JSON.parse(message.content);
-                if (parsed.message) {
-                  messageContent = parsed.message;
+              let isBot = false;
+
+              // Check if content is already an object with a message field
+              if (typeof message.content === 'object' && message.content !== null && message.content.message) {
+                messageContent = message.content.message;
+                isBot = true;
+              }
+              // Check if content is a JSON string
+              else if (typeof message.content === 'string') {
+                // First check if it looks like JSON (starts with '{')
+                if (message.content.trim().startsWith('{')) {
+                  try {
+                    const parsed = JSON.parse(message.content);
+                    if (parsed && parsed.message) {
+                      messageContent = parsed.message;
+                      isBot = true;
+                    }
+                  } catch (e) {
+                    // JSON parsing failed, treat as plain text user message
+                    messageContent = message.content;
+                    isBot = false;
+                  }
+                } else {
+                  // Plain text user message
+                  messageContent = message.content;
+                  isBot = false;
                 }
-              } catch (e) {
-                // If parsing fails, use content as is
-                messageContent = message.content;
               }
 
               return (
@@ -233,7 +249,7 @@ const ConversationView = (props) => {
                       </Text>
 
                       {/* Read receipt for user messages */}
-                      {isUser && (
+                      {!isBot && (
                         <Box style={{ color: 'rgba(255,255,255,0.7)' }}>
                           <svg
                             width="14"
