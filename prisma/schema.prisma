@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model audit_logs {
+  id                 String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  claim_id           String?    @db.Uuid
+  document_id        String?    @db.Uuid
+  user_id            String?    @db.Uuid
+  action_type        String     @db.VarChar(50)
+  action_description String?
+  ip_address         String?    @db.Inet
+  user_agent         String?
+  old_values         Json?
+  new_values         Json?
+  created_at         DateTime?  @default(now()) @db.Timestamp(6)
+  claims             claims?    @relation(fields: [claim_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents          documents? @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([action_type], map: "idx_audit_action")
+  @@index([claim_id], map: "idx_audit_claim")
+  @@index([created_at], map: "idx_audit_date")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model claims {
+  id                    String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  claim_number          String                  @unique @db.VarChar(50)
+  claim_type            String                  @db.VarChar(20)
+  claimant_name         String                  @db.VarChar(255)
+  ic_number             String                  @db.VarChar(20)
+  policy_number         String                  @db.VarChar(50)
+  phone_number          String?                 @db.VarChar(20)
+  email                 String?                 @db.VarChar(255)
+  telegram_chat_id      BigInt
+  incident_date         DateTime                @db.Date
+  incident_location     String?
+  incident_description  String
+  claimed_amount        Decimal?                @db.Decimal(12, 2)
+  approved_amount       Decimal?                @db.Decimal(12, 2)
+  deductible            Decimal?                @db.Decimal(12, 2)
+  status                String                  @default("draft") @db.VarChar(50)
+  submission_date       DateTime?               @db.Timestamp(6)
+  approval_date         DateTime?               @db.Timestamp(6)
+  payment_date          DateTime?               @db.Timestamp(6)
+  confidence_score      Decimal?                @db.Decimal(5, 4)
+  requires_human_review Boolean?                @default(false)
+  auto_approved         Boolean?                @default(false)
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamp(6)
+  created_by            String?                 @db.Uuid
+  assigned_to           String?                 @db.Uuid
+  status_history        Json?                   @default("[]")
+  additional_data       Json?                   @default("{}")
+  audit_logs            audit_logs[]
+  policies              policies                @relation(fields: [policy_number], references: [policy_number], onDelete: NoAction, onUpdate: NoAction)
+  conversation_sessions conversation_sessions[]
+  documents             documents[]
+  status_updates        status_updates[]
+
+  @@index([claim_number], map: "idx_claims_claim_number")
+  @@index([status], map: "idx_claims_status")
+  @@index([submission_date], map: "idx_claims_submission_date")
+  @@index([telegram_chat_id], map: "idx_claims_telegram")
+}
+
+model conversation_sessions {
+  id               String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  telegram_chat_id BigInt     @unique
+  claim_id         String?    @db.Uuid
+  current_state    String     @default("idle") @db.VarChar(50)
+  context_data     Json?      @default("{}")
+  last_interaction DateTime?  @default(now()) @db.Timestamp(6)
+  messages_count   Int?       @default(0)
+  started_at       DateTime?  @default(now()) @db.Timestamp(6)
+  completed_at     DateTime?  @db.Timestamp(6)
+  is_active        Boolean?   @default(true)
+  created_at       DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?  @default(now()) @db.Timestamp(6)
+  claims           claims?    @relation(fields: [claim_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages         messages[]
+
+  @@index([telegram_chat_id], map: "idx_sessions_chat_id")
+  @@index([claim_id], map: "idx_sessions_claim_id")
+  @@index([current_state], map: "idx_sessions_state")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model documents {
+  id                 String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  claim_id           String       @db.Uuid
+  document_type      String       @db.VarChar(50)
+  file_name          String       @db.VarChar(255)
+  file_type          String       @db.VarChar(50)
+  file_size_bytes    Int
+  file_url           String
+  ocr_text           String?
+  ocr_data           Json?        @default("{}")
+  ocr_confidence     Decimal?     @db.Decimal(5, 4)
+  processing_status  String?      @default("pending") @db.VarChar(20)
+  processed_at       DateTime?    @db.Timestamp(6)
+  blur_score         Decimal?     @db.Decimal(5, 4)
+  quality_acceptable Boolean?
+  user_confirmed     Boolean?     @default(false)
+  rejection_reason   String?
+  uploaded_at        DateTime?    @default(now()) @db.Timestamp(6)
+  uploaded_by        String?      @db.VarChar(50)
+  replaced_by        String?      @db.Uuid
+  version            Int?         @default(1)
+  audit_logs         audit_logs[]
+  claims             claims       @relation(fields: [claim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  documents          documents?   @relation("documentsTodocuments", fields: [replaced_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_documents    documents[]  @relation("documentsTodocuments")
+
+  @@index([claim_id], map: "idx_documents_claim")
+  @@index([processing_status], map: "idx_documents_status")
+  @@index([document_type], map: "idx_documents_type")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model messages {
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id            String                @db.Uuid
+  role                  String
+  content               String
+  created_at            DateTime?             @default(now()) @db.Timestamptz(6)
+  conversation_sessions conversation_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)], map: "idx_messages_created_at")
+  @@index([session_id], map: "idx_messages_session_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model policies {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  policy_number     String    @unique @db.VarChar(50)
+  policy_type       String    @db.VarChar(20)
+  policyholder_name String    @db.VarChar(255)
+  policyholder_ic   String    @db.VarChar(20)
+  coverage_start    DateTime  @db.Date
+  coverage_end      DateTime  @db.Date
+  sum_insured       Decimal?  @db.Decimal(12, 2)
+  premium_amount    Decimal?  @db.Decimal(12, 2)
+  status            String?   @default("active") @db.VarChar(20)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  updated_at        DateTime? @default(now()) @db.Timestamp(6)
+  claims            claims[]
+
+  @@index([policyholder_ic], map: "idx_policies_ic")
+  @@index([policy_number], map: "idx_policies_number")
+}
+
+model status_updates {
+  id                  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  claim_id            String    @db.Uuid
+  update_type         String    @db.VarChar(50)
+  old_status          String?   @db.VarChar(50)
+  new_status          String    @db.VarChar(50)
+  message_text        String
+  telegram_message_id Int?
+  sent_to_telegram    Boolean?  @default(false)
+  sent_to_email       Boolean?  @default(false)
+  sent_to_sms         Boolean?  @default(false)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+  created_by          String?   @db.Uuid
+  additional_data     Json?     @default("{}")
+  claims              claims    @relation(fields: [claim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([claim_id], map: "idx_updates_claim")
+  @@index([created_at], map: "idx_updates_date")
+  @@index([update_type], map: "idx_updates_type")
+}
+
+model Admin {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@map("admins")
+}
