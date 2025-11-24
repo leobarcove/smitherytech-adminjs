@@ -102,11 +102,22 @@ const adminOptions = {
         },
         listProperties: ['id', 'telegram_chat_id', 'current_state', 'created_at', 'last_interaction'],
         actions: {
+          show: {
+            before: async (request, context) => {
+              const { record } = context;
+              if (record) {
+                const sessionId = record.id();
+                // Redirect will be handled by Express route
+                return request;
+              }
+              return request;
+            },
+          },
           viewMessages: {
             actionType: 'record',
             icon: 'MessageCircle',
             label: 'View Messages',
-            isVisible: true,
+            component: false,
             handler: async (request, response, context) => {
               const { record } = context;
               const sessionId = record.id();
