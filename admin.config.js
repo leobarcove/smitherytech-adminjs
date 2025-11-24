@@ -1,36 +1,36 @@
-import 'dotenv/config';
-import AdminJS from 'adminjs';
-import { Database, Resource, getModelByName } from '@adminjs/prisma';
-import { PrismaClient } from '@prisma/client';
-import { dashboardHandler } from './dashboard-handler.js';
+import "dotenv/config";
+import AdminJS from "adminjs";
+import { Database, Resource, getModelByName } from "@adminjs/prisma";
+import { PrismaClient } from "@prisma/client";
+import { dashboardHandler } from "./dashboard-handler.js";
 
 AdminJS.registerAdapter({ Database, Resource });
 
 const prisma = new PrismaClient();
-const dmmf = (prisma._baseDmmf || prisma._dmmf);
+const dmmf = prisma._baseDmmf || prisma._dmmf;
 
 const adminOptions = {
-  rootPath: '/admin',
+  rootPath: "/admin",
   dashboard: {
     handler: dashboardHandler,
   },
   branding: {
-    companyName: 'Smithery Tech Admin',
+    companyName: "Smithery Tech Admin",
     logo: false,
     withMadeWithLove: false, // Disable "made with love" component
     softwareBrothers: false,
   },
   resources: [
     {
-      resource: { model: getModelByName('Admin'), client: prisma, dmmf },
+      resource: { model: getModelByName("Admin"), client: prisma, dmmf },
       options: {
         navigation: {
-          name: 'System',
-          icon: 'User',
+          name: "System",
+          icon: "User",
         },
         properties: {
           password: {
-            type: 'password',
+            type: "password",
             isVisible: {
               list: false,
               filter: false,
@@ -58,49 +58,75 @@ const adminOptions = {
       },
     },
     {
-      resource: { model: getModelByName('claims'), client: prisma, dmmf },
+      resource: {
+        model: getModelByName("claims"),
+        client: prisma,
+        dmmf,
+      },
       options: {
         navigation: {
-          name: 'Claims Management',
-          icon: 'FileText',
+          name: "Claims Management",
+          icon: "FileText",
         },
       },
     },
     {
-      resource: { model: getModelByName('policies'), client: prisma, dmmf },
+      resource: {
+        model: getModelByName("policies"),
+        client: prisma,
+        dmmf,
+      },
       options: {
         navigation: {
-          name: 'Claims Management',
-          icon: 'Shield',
+          name: "Claims Management",
+          icon: "Shield",
         },
       },
     },
     {
-      resource: { model: getModelByName('documents'), client: prisma, dmmf },
+      resource: {
+        model: getModelByName("documents"),
+        client: prisma,
+        dmmf,
+      },
       options: {
         navigation: {
-          name: 'Claims Management',
-          icon: 'File',
+          name: "Claims Management",
+          icon: "File",
         },
       },
     },
     {
-      resource: { model: getModelByName('status_updates'), client: prisma, dmmf },
+      resource: {
+        model: getModelByName("status_updates"),
+        client: prisma,
+        dmmf,
+      },
       options: {
         navigation: {
-          name: 'Claims Management',
-          icon: 'Activity',
+          name: "Claims Management",
+          icon: "Activity",
         },
       },
     },
     {
-      resource: { model: getModelByName('conversation_sessions'), client: prisma, dmmf },
+      resource: {
+        model: getModelByName("conversation_sessions"),
+        client: prisma,
+        dmmf,
+      },
       options: {
         navigation: {
-          name: 'Conversations',
-          icon: 'MessageSquare',
+          name: "Conversations",
+          icon: "MessageSquare",
         },
-        listProperties: ['id', 'telegram_chat_id', 'current_state', 'created_at', 'last_interaction'],
+        listProperties: [
+          "id",
+          "telegram_chat_id",
+          "current_state",
+          "created_at",
+          "last_interaction",
+        ],
         actions: {
           show: {
             before: async (request, context) => {
@@ -114,9 +140,9 @@ const adminOptions = {
             },
           },
           viewMessages: {
-            actionType: 'record',
-            icon: 'MessageCircle',
-            label: 'View Messages',
+            actionType: "record",
+            icon: "MessageCircle",
+            label: "View Messages",
             component: false,
             handler: async (request, response, context) => {
               const { record } = context;
@@ -131,17 +157,21 @@ const adminOptions = {
       },
     },
     {
-      resource: { model: getModelByName('messages'), client: prisma, dmmf },
+      resource: {
+        model: getModelByName("messages"),
+        client: prisma,
+        dmmf,
+      },
       options: {
         navigation: false,
       },
     },
     {
-      resource: { model: getModelByName('audit_logs'), client: prisma, dmmf },
+      resource: { model: getModelByName("audit_logs"), client: prisma, dmmf },
       options: {
         navigation: {
-          name: 'System',
-          icon: 'List',
+          name: "System",
+          icon: "List",
         },
       },
     },
