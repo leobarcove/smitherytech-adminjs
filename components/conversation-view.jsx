@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Box, Text, Loader, Icon } from '@adminjs/design-system';
 import { ApiClient, useNotice } from 'adminjs';
 
@@ -10,13 +10,23 @@ const ConversationView = (props) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const addNotice = useNotice();
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     if (sessionId) {
       fetchMessages();
     }
   }, [sessionId]);
+
+  // Auto-scroll to bottom when messages load
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
 
   const fetchMessages = async () => {
     try {
@@ -77,6 +87,16 @@ const ConversationView = (props) => {
       archived: '#9CA3AF'
     };
     return colors[status] || '#6B7280';
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScroll = (e) => {
+    const container = e.target;
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    setShowScrollButton(!isAtBottom);
   };
 
   if (loading) {
@@ -155,7 +175,18 @@ const ConversationView = (props) => {
       </Box>
 
       {/* Messages Container */}
-      <Box p="lg" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <Box
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        p="lg"
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          maxHeight: 'calc(100vh - 250px)',
+          overflowY: 'auto',
+          position: 'relative'
+        }}
+      >
         {messages.length === 0 ? (
           <Box
             flex
@@ -266,6 +297,52 @@ const ConversationView = (props) => {
                 </Box>
               );
             })}
+            {/* Invisible element for auto-scroll */}
+            <div ref={messagesEndRef} />
+          </Box>
+        )}
+
+        {/* Scroll to Bottom Button */}
+        {showScrollButton && (
+          <Box
+            onClick={scrollToBottom}
+            style={{
+              position: 'fixed',
+              bottom: '100px',
+              right: '40px',
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              backgroundColor: '#4C6FFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(76, 111, 255, 0.4)',
+              zIndex: 1000,
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.1)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(76, 111, 255, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(76, 111, 255, 0.4)';
+            }}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 5v14M19 12l-7 7-7-7" />
+            </svg>
           </Box>
         )}
       </Box>
