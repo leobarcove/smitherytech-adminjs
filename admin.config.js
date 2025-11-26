@@ -17,6 +17,10 @@ const Components = {
     "FileUrlDisplay",
     path.resolve("./components/file-url-display.jsx")
   ),
+  ReviewClaim: componentLoader.add(
+    "ReviewClaim",
+    path.resolve("./components/review-claim.jsx")
+  ),
 };
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -67,6 +71,89 @@ const adminOptions = {
             },
           },
         },
+        actions: {
+          reviewClaim: {
+            actionType: "record",
+            icon: "FileText",
+            label: "Review Claim",
+            component: Components.ReviewClaim,
+            showInDrawer: false,
+            handler: async (request, response, context) => {
+              const { record, currentAdmin } = context;
+
+              if (request.method === "get") {
+                return {
+                  record: record.toJSON(currentAdmin),
+                };
+              }
+
+              const {
+                actionType,
+                claimed_amount,
+                approved_amount,
+                payment_date,
+              } = request.payload;
+              const now = new Date();
+
+              try {
+                if (actionType === "approve") {
+                  await prisma.claims.update({
+                    where: { id: record.id() },
+                    data: {
+                      status: "approved",
+                      approval_date: now,
+                      updated_at: now,
+                      payment_date: payment_date
+                        ? new Date(payment_date)
+                        : null,
+                      claimed_amount: claimed_amount
+                        ? parseFloat(claimed_amount)
+                        : null,
+                      approved_amount: approved_amount
+                        ? parseFloat(approved_amount)
+                        : null,
+                    },
+                  });
+                } else if (actionType === "reject") {
+                  await prisma.claims.update({
+                    where: { id: record.id() },
+                    data: {
+                      status: "rejected",
+                      updated_at: now,
+                    },
+                  });
+                }
+
+                // Create status update trail
+                await prisma.status_updates.create({
+                  data: {
+                    claim_id: record.id(),
+                    update_type: "review",
+                    old_status: record.params.status || "draft",
+                    new_status:
+                      actionType === "approve" ? "approved" : "rejected",
+                    message_text: `Claim ${actionType}d by admin`,
+                    created_at: now,
+                  },
+                });
+
+                return {
+                  record: record.toJSON(currentAdmin),
+                  redirectUrl: `/admin/resources/claims`,
+                  notice: {
+                    message: `Claim ${
+                      actionType === "approve" ? "approved" : "rejected"
+                    } successfully`,
+                    type: "success",
+                  },
+                };
+              } catch (error) {
+                console.error("Error reviewing claim:", error);
+                throw new Error("Failed to update claim status");
+              }
+            },
+          },
+        },
       },
     },
     {
@@ -105,6 +192,12 @@ const adminOptions = {
             components: {
               list: Components.FileUrlDisplay,
               show: Components.FileUrlDisplay,
+            },
+            isVisible: {
+              list: true,
+              show: true,
+              filter: false,
+              edit: false,
             },
           },
           file_name: {
