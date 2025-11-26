@@ -58,7 +58,6 @@ model claims {
   status_history        Json?                   @default("[]")
   additional_data       Json?                   @default("{}")
   audit_logs            audit_logs[]
-  policies              policies                @relation(fields: [policy_number], references: [policy_number], onDelete: NoAction, onUpdate: NoAction)
   conversation_sessions conversation_sessions[]
   documents             documents[]
   status_updates        status_updates[]
@@ -154,7 +153,6 @@ model policies {
   status            String?   @default("active") @db.VarChar(20)
   created_at        DateTime? @default(now()) @db.Timestamp(6)
   updated_at        DateTime? @default(now()) @db.Timestamp(6)
-  claims            claims[]
 
   @@index([policyholder_ic], map: "idx_policies_ic")
   @@index([policy_number], map: "idx_policies_number")

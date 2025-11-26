@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 import AdminJS from "adminjs";
 import { Database, Resource, getModelByName } from "@adminjs/prisma";
 import { PrismaClient } from "@prisma/client";
@@ -10,7 +11,7 @@ const componentLoader = new ComponentLoader();
 const Components = {
   ConversationView: componentLoader.add(
     "ConversationView",
-    "./components/conversation-view.jsx"
+    path.resolve("./components/conversation-view.jsx")
   ),
 };
 
