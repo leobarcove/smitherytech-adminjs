@@ -115,8 +115,6 @@ model documents {
   version            Int?         @default(1)
   audit_logs         audit_logs[]
   claims             claims       @relation(fields: [claim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  documents          documents?   @relation("documentsTodocuments", fields: [replaced_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  other_documents    documents[]  @relation("documentsTodocuments")
 
   @@index([claim_id], map: "idx_documents_claim")
   @@index([processing_status], map: "idx_documents_status")

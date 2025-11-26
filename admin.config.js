@@ -13,6 +13,10 @@ const Components = {
     "ConversationView",
     path.resolve("./components/conversation-view.jsx")
   ),
+  FileUrlDisplay: componentLoader.add(
+    "FileUrlDisplay",
+    path.resolve("./components/file-url-display.jsx")
+  ),
 };
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -44,6 +48,25 @@ const adminOptions = {
           name: "InsuraWiz",
           icon: "FileText",
         },
+        listProperties: [
+          "id",
+          "claim_type",
+          "claim_number",
+          "claimant_name",
+          "policy_number",
+          "status",
+          "created_at",
+        ],
+        properties: {
+          email: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
+        },
       },
     },
     {
@@ -69,6 +92,45 @@ const adminOptions = {
         navigation: {
           name: "InsuraWiz",
           icon: "File",
+        },
+        listProperties: [
+          "id",
+          "document_type",
+          "file_url",
+          "processing_status",
+          "uploaded_at",
+        ],
+        properties: {
+          file_url: {
+            components: {
+              list: Components.FileUrlDisplay,
+              show: Components.FileUrlDisplay,
+            },
+          },
+          file_name: {
+            isVisible: {
+              list: false,
+              show: false,
+              filter: true,
+              edit: false,
+            },
+          },
+          file_type: {
+            isVisible: {
+              list: false,
+              show: false,
+              filter: true,
+              edit: false,
+            },
+          },
+          file_size_bytes: {
+            isVisible: {
+              list: false,
+              show: false,
+              filter: false,
+              edit: false,
+            },
+          },
         },
       },
     },
