@@ -21,6 +21,10 @@ const Components = {
     "ReviewClaim",
     path.resolve("./components/review-claim.jsx")
   ),
+  ClaimDocuments: componentLoader.add(
+    "ClaimDocuments",
+    path.resolve("./components/claim-documents.jsx")
+  ),
 };
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -132,7 +136,7 @@ const adminOptions = {
                     old_status: record.params.status || "draft",
                     new_status:
                       actionType === "approve" ? "approved" : "rejected",
-                    message_text: `Claim ${actionType}d by admin`,
+                    message_text: `Claim ${new_status} by admin`,
                     created_at: now,
                   },
                 });
@@ -272,6 +276,13 @@ const adminOptions = {
           name: "InsuraWiz",
           icon: "Activity",
         },
+        listProperties: [
+          "id",
+          "update_type",
+          "old_status",
+          "new_status",
+          "created_at",
+        ],
       },
     },
     {

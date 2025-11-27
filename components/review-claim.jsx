@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -13,6 +13,7 @@ import {
 } from "@adminjs/design-system";
 import { ApiClient, useNotice } from "adminjs";
 import { useNavigate } from "react-router-dom";
+import ClaimDocuments from "./claim-documents";
 
 const ReviewClaim = (props) => {
   const { record, resource } = props;
@@ -34,6 +35,36 @@ const ReviewClaim = (props) => {
     record.params.payment_date ? new Date(record.params.payment_date) : null
   );
   const [loading, setLoading] = useState(false);
+  const [documents, setDocuments] = useState([]);
+  const [documentsLoading, setDocumentsLoading] = useState(true);
+
+  // Fetch documents when component mounts
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        setDocumentsLoading(true);
+        const response = await api.resourceAction({
+          resourceId: "documents",
+          actionName: "list",
+          params: {
+            filters: {
+              claim_id: record.params.id,
+            },
+          },
+        });
+
+        if (response.data && response.data.records) {
+          setDocuments(response.data.records.map((r) => r.params));
+        }
+      } catch (error) {
+        sendNotice({ message: "Error loading documents", type: "error" });
+      } finally {
+        setDocumentsLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, [record.params.id]);
 
   const handleAction = async (action) => {
     if (action === "approve") {
@@ -111,9 +142,25 @@ const ReviewClaim = (props) => {
           </Box>
         </Section>
 
+        <Section mt="xl">
+          {documentsLoading ? (
+            <Box display="flex" justifyContent="center" p="xl">
+              <Loader />
+            </Box>
+          ) : (
+            <ClaimDocuments
+              record={record}
+              where="review"
+              documents={documents}
+            />
+          )}
+        </Section>
+
         {isFinalized ? (
           <Section mt="xl">
-            <Header.H3 mb="default">Claim Status</Header.H3>
+            <Header.H5 style={{ marginBottom: "1.5rem" }}>
+              Claim Status
+            </Header.H5>
             <Box>
               <Badge
                 variant={currentStatus === "approved" ? "success" : "danger"}
@@ -139,53 +186,50 @@ const ReviewClaim = (props) => {
           </Section>
         ) : (
           <>
-            <Section mt="xl">
-              <Header.H3 mb="default">Review Decision</Header.H3>
-              <Box width={1 / 2}>
-                <Box my="xl">
-                  <Label>Claimed Amount</Label>
-                  <Input
-                    width="100%"
-                    value={claimedAmount}
-                    onChange={(e) => setClaimedAmount(e.target.value)}
-                    type="number"
-                  />
-                </Box>
-                <Box mb="xl">
-                  <Label>Approved Amount (Required for Approval)</Label>
-                  <Input
-                    width="100%"
-                    value={approvedAmount}
-                    onChange={(e) => setApprovedAmount(e.target.value)}
-                    type="number"
-                  />
-                </Box>
-                <Box mb="xl">
-                  <Label>Payment Date (Required for Approval)</Label>
-                  <DatePicker
-                    value={paymentDate}
-                    onChange={(date) => setPaymentDate(date)}
-                  />
-                </Box>
+            <Box width={1 / 2}>
+              <Box my="xl">
+                <Label>Claimed Amount</Label>
+                <Input
+                  width="100%"
+                  value={claimedAmount}
+                  onChange={(e) => setClaimedAmount(e.target.value)}
+                  type="number"
+                />
               </Box>
+              <Box mb="xl">
+                <Label>Approved Amount (Required for Approval)</Label>
+                <Input
+                  width="100%"
+                  value={approvedAmount}
+                  onChange={(e) => setApprovedAmount(e.target.value)}
+                  type="number"
+                />
+              </Box>
+              <Box mb="xl">
+                <Label>Payment Date (Required for Approval)</Label>
+                <DatePicker
+                  value={paymentDate}
+                  onChange={(date) => setPaymentDate(date)}
+                />
+              </Box>
+            </Box>
 
-              <Box flex style={{ gap: "1rem" }}>
-                <Button
-                  variant="primary"
-                  onClick={() => handleAction("approve")}
-                  disabled={loading}
-                >
-                  {loading ? <Loader /> : "Approve"}
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => handleAction("reject")}
-                  disabled={loading}
-                >
-                  {loading ? <Loader /> : "Reject"}
-                </Button>
-              </Box>
-            </Section>
+            <Box flex style={{ gap: "1rem" }}>
+              <Button
+                variant="primary"
+                onClick={() => handleAction("approve")}
+                disabled={loading}
+              >
+                {loading ? <Loader /> : "Approve"}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => handleAction("reject")}
+                disabled={loading}
+              >
+                {loading ? <Loader /> : "Reject"}
+              </Button>
+            </Box>
           </>
         )}
       </Box>

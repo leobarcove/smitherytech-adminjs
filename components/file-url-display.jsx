@@ -45,7 +45,7 @@ const FileUrlDisplay = (props) => {
         alignItems: "center",
         gap: "8px",
         textDecoration: "none",
-        color: "#4C6FFF",
+        color: "rgb(48, 64, 214)",
         maxWidth: isShowView ? "100%" : "400px",
       }}
     >
