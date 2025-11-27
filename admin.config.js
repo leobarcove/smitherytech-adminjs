@@ -348,6 +348,214 @@ const adminOptions = {
       },
     },
     {
+      resource: {
+        model: getModelByName("wrs_pro_products"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Package",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_rewards"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Gift",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_brands"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Tag",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_campaigns"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Target",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_moderation_queue"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Shield",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_campaign_products"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Layers",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_customers"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Users",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_identity_verifications"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "UserCheck",
+        },
+        properties: {
+          ic_file_url: {
+            components: {
+              list: Components.FileUrlDisplay,
+              show: Components.FileUrlDisplay,
+            },
+          },
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_registrations"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "FileText",
+        },
+        properties: {
+          receipt_file_url: {
+            components: {
+              list: Components.FileUrlDisplay,
+              show: Components.FileUrlDisplay,
+            },
+          },
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_registration_serials"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Hash",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_support_tickets"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "LifeBuoy",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_installers"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Tool",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_installations"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Settings",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_chat_sessions"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "MessageSquare",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_chat_history"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: false,
+      },
+    },
+    {
       resource: { model: getModelByName("Admin"), client: prisma, dmmf },
       options: {
         navigation: {
