@@ -349,6 +349,19 @@ const adminOptions = {
     },
     {
       resource: {
+        model: getModelByName("wrs_pro_brands"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Tag",
+        },
+      },
+    },
+    {
+      resource: {
         model: getModelByName("wrs_pro_products"),
         client: prisma,
         dmmf,
@@ -375,19 +388,6 @@ const adminOptions = {
     },
     {
       resource: {
-        model: getModelByName("wrs_pro_brands"),
-        client: prisma,
-        dmmf,
-      },
-      options: {
-        navigation: {
-          name: "WRS Pro",
-          icon: "Tag",
-        },
-      },
-    },
-    {
-      resource: {
         model: getModelByName("wrs_pro_campaigns"),
         client: prisma,
         dmmf,
@@ -396,19 +396,6 @@ const adminOptions = {
         navigation: {
           name: "WRS Pro",
           icon: "Target",
-        },
-      },
-    },
-    {
-      resource: {
-        model: getModelByName("wrs_pro_moderation_queue"),
-        client: prisma,
-        dmmf,
-      },
-      options: {
-        navigation: {
-          name: "WRS Pro",
-          icon: "Shield",
         },
       },
     },
@@ -490,6 +477,19 @@ const adminOptions = {
         navigation: {
           name: "WRS Pro",
           icon: "Hash",
+        },
+      },
+    },
+    {
+      resource: {
+        model: getModelByName("wrs_pro_moderation_queue"),
+        client: prisma,
+        dmmf,
+      },
+      options: {
+        navigation: {
+          name: "WRS Pro",
+          icon: "Shield",
         },
       },
     },
