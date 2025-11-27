@@ -74,6 +74,22 @@ const adminOptions = {
               edit: false,
             },
           },
+          status_history: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
+          additional_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
         },
         actions: {
           reviewClaim: {
@@ -228,6 +244,22 @@ const adminOptions = {
               edit: false,
             },
           },
+          ocr_text: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
+          ocr_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
         },
       },
     },
@@ -249,6 +281,16 @@ const adminOptions = {
           "created_at",
           "last_interaction",
         ],
+        properties: {
+          context_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
+        },
         actions: {
           viewMessages: {
             actionType: "record",
@@ -283,6 +325,16 @@ const adminOptions = {
           "new_status",
           "created_at",
         ],
+        properties: {
+          additional_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
+        },
       },
     },
     {

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Box, Header, Label, Link, Loader, Text } from "@adminjs/design-system";
+import { ApiClient } from "adminjs";
 import FileUrlDisplay from "./file-url-display";
+
+const api = new ApiClient();
 
 const ClaimDocuments = (props) => {
   const { record, where, documents: propDocuments } = props;
@@ -14,8 +17,34 @@ const ClaimDocuments = (props) => {
       return;
     }
 
-    setLoading(false);
-  }, [propDocuments]);
+    const fetchDocuments = async () => {
+      if (!record?.params?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await api.resourceAction({
+          resourceId: "documents",
+          actionName: "list",
+          params: {
+            "filters.claims": record.params.id,
+          },
+        });
+
+        if (response.data && response.data.records) {
+          setDocuments(response.data.records.map((r) => r.params));
+        }
+      } catch (error) {
+        console.error("Error loading documents:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, [propDocuments, record]);
 
   if (loading) {
     return <Loader />;
@@ -63,6 +92,23 @@ const ClaimDocuments = (props) => {
       if (Array.isArray(value)) {
         if (value.length === 0) {
           return <Text style={{ color: "#999", fontSize: "12px" }}>[]</Text>;
+        }
+
+        // Check if array contains objects (that are not null)
+        const containsObjects = value.some(
+          (item) => typeof item === "object" && item !== null
+        );
+
+        if (containsObjects) {
+          return (
+            <Box>
+              {value.map((item, index) => (
+                <Box key={index} mb={index === value.length - 1 ? "" : "sm"}>
+                  {renderValue(item, currentDepth + 1)}
+                </Box>
+              ))}
+            </Box>
+          );
         }
 
         // Always display arrays as comma-separated values
@@ -199,7 +245,6 @@ const ClaimDocuments = (props) => {
               borderCollapse: "collapse",
               marginTop: currentDepth === 0 ? "6px" : "3px",
               fontSize: "12px",
-              backgroundColor: currentDepth > 0 ? "#fafbfc" : "transparent",
               tableLayout: "fixed",
             }}
           >

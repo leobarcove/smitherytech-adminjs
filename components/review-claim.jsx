@@ -47,9 +47,7 @@ const ReviewClaim = (props) => {
           resourceId: "documents",
           actionName: "list",
           params: {
-            filters: {
-              claim_id: record.params.id,
-            },
+            "filters.claims": record.params.id,
           },
         });
 
