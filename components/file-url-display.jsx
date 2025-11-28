@@ -6,8 +6,10 @@ const FileUrlDisplay = (props) => {
   const [imageError, setImageError] = useState(false);
 
   const isShowView = where === "show";
-  const fileUrl = record?.params?.file_url || "";
-  const fileName = record?.params?.file_name || "";
+  const fileUrl =
+    record?.params?.[property?.props?.key] || record?.params?.file_url || "";
+  const fileName = property?.props?.name || record?.params?.file_name || "File";
+  const fileField = property?.props?.file || "Document File";
 
   if (!fileUrl) {
     return (
@@ -90,7 +92,7 @@ const FileUrlDisplay = (props) => {
       }}
     >
       {/* Label when in show view */}
-      {isShowView && <Label variant="light">Document File</Label>}
+      {isShowView && <Label variant="light">{fileField}</Label>}
 
       {/* Thumbnail (only for images) */}
       {showThumbnail && (

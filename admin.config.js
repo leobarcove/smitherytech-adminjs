@@ -25,6 +25,10 @@ const Components = {
     "ClaimDocuments",
     path.resolve("./components/claim-documents.jsx")
   ),
+  WrsConversationView: componentLoader.add(
+    "WrsConversationView",
+    path.resolve("./components/wrs-conversation-view.jsx")
+  ),
 };
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -358,6 +362,19 @@ const adminOptions = {
           name: "WRS Pro",
           icon: "Tag",
         },
+        properties: {
+          logo_url: {
+            components: {
+              list: Components.FileUrlDisplay,
+              show: Components.FileUrlDisplay,
+            },
+            props: {
+              key: "logo_url",
+              name: "Logo Url",
+              file: "File",
+            },
+          },
+        },
       },
     },
     {
@@ -370,6 +387,16 @@ const adminOptions = {
         navigation: {
           name: "WRS Pro",
           icon: "Package",
+        },
+        properties: {
+          serial_components: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
         },
       },
     },
@@ -423,6 +450,16 @@ const adminOptions = {
           name: "WRS Pro",
           icon: "Users",
         },
+        properties: {
+          email: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
+        },
       },
     },
     {
@@ -441,6 +478,19 @@ const adminOptions = {
             components: {
               list: Components.FileUrlDisplay,
               show: Components.FileUrlDisplay,
+            },
+            props: {
+              key: "ic_file_url",
+              name: "IC File Url",
+              file: "IC File",
+            },
+          },
+          ic_ocr_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
             },
           },
         },
@@ -462,6 +512,19 @@ const adminOptions = {
             components: {
               list: Components.FileUrlDisplay,
               show: Components.FileUrlDisplay,
+            },
+            props: {
+              key: "receipt_file_url",
+              name: "Receipt File Url",
+              file: "Receipt File",
+            },
+          },
+          receipt_ocr_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
             },
           },
         },
@@ -490,6 +553,27 @@ const adminOptions = {
         navigation: {
           name: "WRS Pro",
           icon: "Shield",
+        },
+        properties: {
+          uploaded_file_url: {
+            components: {
+              list: Components.FileUrlDisplay,
+              show: Components.FileUrlDisplay,
+            },
+            props: {
+              key: "uploaded_file_url",
+              name: "Uploaded File Url",
+              file: "Uploaded File",
+            },
+          },
+          ocr_extracted_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
         },
       },
     },
@@ -542,6 +626,38 @@ const adminOptions = {
         navigation: {
           name: "WRS Pro",
           icon: "MessageSquare",
+        },
+        listProperties: [
+          "id",
+          "telegram_chat_id",
+          "current_state",
+          "current_flow",
+          "created_at",
+          "last_message_at",
+        ],
+        properties: {
+          flow_data: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
+            },
+          },
+        },
+        actions: {
+          viewMessages: {
+            actionType: "record",
+            icon: "MessageSquare",
+            label: "View Messages",
+            component: Components.WrsConversationView,
+            showInDrawer: false,
+            handler: async (request, response, context) => {
+              return {
+                record: context.record.toJSON(context.currentAdmin),
+              };
+            },
+          },
         },
       },
     },
