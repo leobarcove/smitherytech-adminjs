@@ -310,19 +310,29 @@ const start = async () => {
                   </div>
                   <div class="info-item">
                     <div class="info-label">Telegram Chat ID</div>
-                    <div class="info-value">${session.telegram_chat_id || 'N/A'}</div>
+                    <div class="info-value">${
+                      session.telegram_chat_id || "N/A"
+                    }</div>
                   </div>
                   <div class="info-item">
                     <div class="info-label">Current State</div>
-                    <div class="info-value">${session.current_state || 'N/A'}</div>
+                    <div class="info-value">${
+                      session.current_state || "N/A"
+                    }</div>
                   </div>
                   <div class="info-item">
                     <div class="info-label">Created At</div>
-                    <div class="info-value">${new Date(session.created_at).toLocaleString()}</div>
+                    <div class="info-value">${new Date(
+                      session.created_at
+                    ).toLocaleString()}</div>
                   </div>
                   <div class="info-item">
                     <div class="info-label">Last Interaction</div>
-                    <div class="info-value">${session.last_interaction ? new Date(session.last_interaction).toLocaleString() : 'N/A'}</div>
+                    <div class="info-value">${
+                      session.last_interaction
+                        ? new Date(session.last_interaction).toLocaleString()
+                        : "N/A"
+                    }</div>
                   </div>
                   <div class="info-item">
                     <div class="info-label">Total Messages</div>
@@ -335,15 +345,26 @@ const start = async () => {
                 <div class="messages-header">
                   Messages History
                 </div>
-                ${messages.length > 0 ? messages.map(msg => `
+                ${
+                  messages.length > 0
+                    ? messages
+                        .map(
+                          (msg) => `
                   <div class="message ${msg.role}">
                     <div class="message-header">
                       <span class="message-role">${msg.role}</span>
-                      <span class="message-time">${new Date(msg.created_at).toLocaleString()}</span>
+                      <span class="message-time">${new Date(
+                        msg.created_at
+                      ).toLocaleString()}</span>
                     </div>
-                    <div class="message-content">${escapeHtml(msg.content)}</div>
+                    <div class="message-content">${escapeHtml(
+                      msg.content
+                    )}</div>
                   </div>
-                `).join('') : `
+                `
+                        )
+                        .join("")
+                    : `
                   <div class="empty-state">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -351,7 +372,8 @@ const start = async () => {
                     <h3>No messages yet</h3>
                     <p>This conversation session doesn't have any messages.</p>
                   </div>
-                `}
+                `
+                }
               </div>
             </div>
           </body>
@@ -396,13 +418,13 @@ const start = async () => {
   // Helper function to escape HTML
   function escapeHtml(text) {
     const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    return text.replace(/[&<>"']/g, (m) => map[m]);
   }
 
   // API endpoint to fetch conversation messages
@@ -446,7 +468,182 @@ const start = async () => {
     }
   });
 
+  app.put(
+    "/admin/api/slotiva/appointments/:appointmentId/cancel",
+    async (req, res) => {
+      try {
+        const { appointmentId } = req.params;
+
+        const appointment = await prisma.slotiva_appointments.update({
+          where: { id: appointmentId },
+          data: {
+            status: "cancelled",
+          },
+        });
+
+        res.json({
+          success: true,
+          appointment,
+        });
+      } catch (error) {
+        console.error("Error canceling slotiva appointment:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to cancel appointment",
+        });
+      }
+    }
+  );
+
+  app.put(
+    "/admin/api/slotiva/appointments/:appointmentId",
+    async (req, res) => {
+      try {
+        const { appointmentId } = req.params;
+        const { start_time, end_time } = req.body;
+
+        const newStart = new Date(start_time);
+        const newEnd = new Date(end_time);
+
+        // Validate dates
+        if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid date format",
+          });
+        }
+
+        // 1. Restrict to Today or Future Dates
+        const now = new Date();
+        const todayMidnight = new Date(now);
+        todayMidnight.setHours(0, 0, 0, 0);
+
+        if (newStart < todayMidnight) {
+          return res.status(400).json({
+            success: false,
+            error: "Appointments can only be rescheduled for today or future dates.",
+          });
+        }
+
+        // 2. Check Availability (Overlap Check)
+        // Exclude the current appointment and cancelled appointments
+        const conflict = await prisma.slotiva_appointments.findFirst({
+          where: {
+            AND: [
+              { id: { not: appointmentId } },
+              { status: { notIn: ["cancelled", "completed"] } },
+              {
+                start_time: { lt: newEnd },
+                end_time: { gt: newStart },
+              },
+            ],
+          },
+        });
+
+        if (conflict) {
+          return res.status(400).json({
+            success: false,
+            error: "The requested time slot is not available.",
+          });
+        }
+
+        const appointment = await prisma.slotiva_appointments.update({
+          where: { id: appointmentId },
+          data: {
+            start_time,
+            end_time,
+          },
+        });
+
+        res.json({
+          success: true,
+          appointment,
+        });
+      } catch (error) {
+        console.error("Error updating slotiva appointment:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to update appointment",
+        });
+      }
+    }
+  );
+
+  // API endpoint to fetch Slotiva appointments for calendar view
+  app.get("/admin/api/slotiva/appointments", async (req, res) => {
+    console.log("fetching slotiva appointments");
+    try {
+      const { start, end } = req.query;
+
+      // Build query filters
+      const where = {};
+      if (start && end) {
+        where.start_time = {
+          gte: new Date(start),
+          lte: new Date(end),
+        };
+      }
+
+      // Fetch appointments from database
+      const appointments = await prisma.slotiva_appointments.findMany({
+        where,
+        orderBy: {
+          start_time: "asc",
+        },
+      });
+
+      // Transform appointments to FullCalendar event format
+      const events = appointments.map((appointment) => {
+        // Determine color based on status
+        const statusColors = {
+          confirmed: { bg: "#10B981", border: "#059669" },
+          cancelled: { bg: "#EF4444", border: "#DC2626" },
+          completed: { bg: "#3B82F6", border: "#2563EB" },
+          pending: { bg: "#F59E0B", border: "#D97706" },
+        };
+        const colors = statusColors[appointment.status] || {
+          bg: "#6B7280",
+          border: "#4B5563",
+        };
+
+        return {
+          id: appointment.id,
+          title: `${appointment.client_name}${
+            appointment.service_type ? ` - ${appointment.service_type}` : ""
+          }`,
+          start: appointment.start_time,
+          end: appointment.end_time,
+          backgroundColor: colors.bg,
+          borderColor: colors.border,
+          extendedProps: {
+            bookingId: appointment.booking_id,
+            clientName: appointment.client_name,
+            phone: appointment.phone,
+            email: appointment.email,
+            serviceType: appointment.service_type,
+            status: appointment.status,
+            notes: appointment.notes,
+            calendarEventId: appointment.calendar_event_id,
+            reminderSent: appointment.reminder_sent,
+          },
+        };
+      });
+
+      res.json({
+        success: true,
+        appointments: events,
+      });
+    } catch (error) {
+      console.error("Error fetching Slotiva appointments:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch appointments",
+      });
+    }
+  });
+
   // Mount AdminJS router AFTER all custom routes
+
   app.use(admin.options.rootPath, adminRouter);
 
   app.get("/", (req, res) => {

@@ -477,3 +477,92 @@ model wrs_pro_support_tickets {
 
   @@index([status], map: "idx_support_tickets_status")
 }
+
+model slotiva_appointments {
+  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  booking_id         String               @unique @default(dbgenerated("('BK-'::text || (EXTRACT(epoch FROM now()))::integer)")) @db.VarChar(50)
+  client_name        String               @db.VarChar(255)
+  phone              String?              @db.VarChar(20)
+  email              String?              @db.VarChar(255)
+  service_type       String?              @db.VarChar(100)
+  start_time         DateTime             @db.Timestamptz(6)
+  end_time           DateTime             @db.Timestamptz(6)
+  status             String               @default("confirmed") @db.VarChar(20)
+  calendar_event_id  String?              @db.VarChar(255)
+  reminder_sent      Boolean?             @default(false)
+  reminder_sent_at   DateTime?            @db.Timestamptz(6)
+  notes              String?
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  created_by         String?              @db.VarChar(50)
+  slotiva_audit_logs slotiva_audit_logs[]
+
+  @@index([start_time], map: "idx_slotiva_appointments_start_time")
+  @@index([status], map: "idx_slotiva_appointments_status")
+  @@index([email], map: "idx_slotiva_appointments_email")
+  @@index([phone], map: "idx_slotiva_appointments_phone")
+  @@index([booking_id], map: "idx_slotiva_appointments_booking_id")
+  @@map("slotiva_appointments")
+}
+
+model slotiva_conversation_sessions {
+  id                            String                          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  session_id                    String                          @unique @db.VarChar(255)
+  channel                       String?                         @db.VarChar(50)
+  phone                         String?                         @db.VarChar(20)
+  email                         String?                         @db.VarChar(255)
+  started_at                    DateTime?                       @default(now()) @db.Timestamptz(6)
+  last_activity                 DateTime?                       @default(now()) @db.Timestamptz(6)
+  slotiva_conversation_messages slotiva_conversation_messages[]
+
+  @@index([session_id], map: "idx_slotiva_sessions_session_id")
+  @@index([phone], map: "idx_slotiva_sessions_phone")
+  @@index([email], map: "idx_slotiva_sessions_email")
+  @@map("slotiva_conversation_sessions")
+}
+
+model slotiva_conversation_messages {
+  id                            String                        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  session_id                    String                        @db.Uuid
+  role                          String                        @db.VarChar(20)
+  message                       String
+  tool_calls                    Json?
+  created_at                    DateTime?                     @default(now()) @db.Timestamptz(6)
+  slotiva_conversation_sessions slotiva_conversation_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([session_id], map: "idx_slotiva_messages_session_id")
+  @@index([created_at], map: "idx_slotiva_messages_created_at")
+  @@map("slotiva_conversation_messages")
+}
+
+model slotiva_audit_logs {
+  id                   String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appointment_id       String?               @db.Uuid
+  action_type          String                @db.VarChar(50)
+  action_description   String?
+  user_input           Json?
+  ai_response          Json?
+  tool_calls           Json?
+  session_id           String?               @db.VarChar(255)
+  channel              String?               @db.VarChar(50)
+  created_at           DateTime?             @default(now()) @db.Timestamptz(6)
+  slotiva_appointments slotiva_appointments? @relation(fields: [appointment_id], references: [id], onUpdate: NoAction)
+
+  @@index([appointment_id], map: "idx_slotiva_audit_appointment_id")
+  @@index([action_type], map: "idx_slotiva_audit_action_type")
+  @@index([created_at], map: "idx_slotiva_audit_created_at")
+  @@index([session_id], map: "idx_slotiva_audit_session_id")
+  @@map("slotiva_audit_logs")
+}
+
+model slotiva_service_types {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String   @unique @db.VarChar(255)
+  description      String?
+  duration_minutes Int      @default(60)
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@map("slotiva_service_types")
+}
