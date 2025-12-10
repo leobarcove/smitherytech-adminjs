@@ -49,6 +49,10 @@ const Components = {
     "LendLyxConversationView",
     path.resolve("./components/lendlyx-conversation-view.jsx")
   ),
+  Dashboard: componentLoader.add(
+    "Dashboard",
+    path.resolve("./components/dashboard.jsx")
+  ),
 };
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -61,6 +65,7 @@ const adminOptions = {
   componentLoader,
   dashboard: {
     handler: dashboardHandler,
+    component: Components.Dashboard,
   },
   branding: {
     companyName: "Smithery Tech Admin",
@@ -118,7 +123,7 @@ const adminOptions = {
       options: {
         navigation: {
           name: "InsuraWiz",
-          icon: "FileText",
+          icon: "Shield",
         },
         listProperties: [
           "id",
@@ -1071,7 +1076,7 @@ const adminOptions = {
       options: {
         navigation: {
           name: "LendLyx",
-          icon: "Users",
+          icon: "DollarSign",
         },
         listProperties: [
           "id",
