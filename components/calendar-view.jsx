@@ -602,8 +602,8 @@ const CalendarView = (props) => {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         .fc .fc-button {
-          background-color: #4C6FFF;
-          border-color: #4C6FFF;
+          background-color: #3040D6;
+          border-color: #3040D6;
           text-transform: capitalize;
           font-weight: 500;
         }

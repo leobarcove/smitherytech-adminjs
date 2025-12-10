@@ -134,7 +134,7 @@ const ConversationView = (props) => {
                   width: '48px',
                   height: '48px',
                   borderRadius: '50%',
-                  backgroundColor: '#4C6FFF',
+                  backgroundColor: '#3040D6',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -244,7 +244,7 @@ const ConversationView = (props) => {
                   <Box
                     style={{
                       maxWidth: '70%',
-                      backgroundColor: isBot ? 'white' : '#4C6FFF',
+                      backgroundColor: isBot ? 'white' : '#3040D6',
                       borderRadius: isBot ? '0 16px 16px 16px' : '16px 0 16px 16px',
                       padding: '12px 16px',
                       boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
@@ -313,7 +313,7 @@ const ConversationView = (props) => {
               width: '48px',
               height: '48px',
               borderRadius: '50%',
-              backgroundColor: '#4C6FFF',
+              backgroundColor: '#3040D6',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

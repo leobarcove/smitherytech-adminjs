@@ -145,7 +145,7 @@ const WrsConversationView = (props) => {
                   width: "48px",
                   height: "48px",
                   borderRadius: "50%",
-                  backgroundColor: "#4C6FFF",
+                  backgroundColor: "#3040D6",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -237,7 +237,7 @@ const WrsConversationView = (props) => {
                   <Box
                     style={{
                       maxWidth: "70%",
-                      backgroundColor: isBot ? "white" : "#4C6FFF",
+                      backgroundColor: isBot ? "white" : "#3040D6",
                       borderRadius: isBot
                         ? "0 16px 16px 16px"
                         : "16px 0 16px 16px",
@@ -308,7 +308,7 @@ const WrsConversationView = (props) => {
               width: "48px",
               height: "48px",
               borderRadius: "50%",
-              backgroundColor: "#4C6FFF",
+              backgroundColor: "#3040D6",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

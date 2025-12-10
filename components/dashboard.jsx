@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Box, H2, Text, Icon } from "@adminjs/design-system";
+import { Box, H2, Text, Icon, Loader } from "@adminjs/design-system";
 import { ApiClient } from "adminjs";
 
 const api = new ApiClient();
 
 const COLORS = {
-  primary: "#4C6FFF",
+  primary: "#3040D6",
   success: "#10B981",
   warning: "#F59E0B",
   warning_light: "#EDC683",
@@ -353,7 +353,7 @@ const Dashboard = () => {
         height="80vh"
         minHeight="400px"
       >
-        <Text>Loading analytics...</Text>
+        <Loader />
       </Box>
     );
   }

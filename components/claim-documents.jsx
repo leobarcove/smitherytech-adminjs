@@ -404,7 +404,7 @@ const ClaimDocuments = (props) => {
           mb={index === documentsWithParams.length - 1 ? "" : "xxl"}
           p="lg"
           style={{
-            borderLeft: "3px solid #4C6FFF",
+            borderLeft: "3px solid #3040D6",
             backgroundColor: "#f8f9fa",
             borderRadius: "4px",
             overflow: "hidden",
@@ -438,7 +438,7 @@ const ClaimDocuments = (props) => {
               <Box
                 style={{
                   padding: "4px 12px",
-                  backgroundColor: "#4C6FFF",
+                  backgroundColor: "#3040D6",
                   color: "white",
                   borderRadius: "12px",
                   fontSize: "12px",

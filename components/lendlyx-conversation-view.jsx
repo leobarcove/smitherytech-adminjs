@@ -139,7 +139,7 @@ const LendLyxConversationView = (props) => {
                   width: "48px",
                   height: "48px",
                   borderRadius: "50%",
-                  backgroundColor: "#4C6FFF",
+                  backgroundColor: "#3040D6",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -241,7 +241,7 @@ const LendLyxConversationView = (props) => {
                         ? "#f3f4f6"
                         : isBot
                         ? "white"
-                        : "#4C6FFF",
+                        : "#3040D6",
                       borderRadius: isSystem
                         ? "8px"
                         : isBot
@@ -311,7 +311,7 @@ const LendLyxConversationView = (props) => {
               width: "48px",
               height: "48px",
               borderRadius: "50%",
-              backgroundColor: "#4C6FFF",
+              backgroundColor: "#3040D6",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
