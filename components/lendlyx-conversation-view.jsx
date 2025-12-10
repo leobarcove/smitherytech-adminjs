@@ -29,7 +29,7 @@ const LendLyxConversationView = (props) => {
   const fetchMessages = async () => {
     try {
       const response = await fetch(
-        `/admin/api/lendlyx-conversations/${sessionId}/messages`
+        `/admin/api/lendlyx/conversations/${sessionId}/messages`
       );
       const data = await response.json();
 

@@ -9,9 +9,9 @@ import { ComponentLoader } from "adminjs";
 const componentLoader = new ComponentLoader();
 
 const Components = {
-  ConversationView: componentLoader.add(
-    "ConversationView",
-    path.resolve("./components/conversation-view.jsx")
+  InsuraWizConversationView: componentLoader.add(
+    "InsuraWizConversationView",
+    path.resolve("./components/insurawiz-conversation-view.jsx")
   ),
   FileUrlDisplay: componentLoader.add(
     "FileUrlDisplay",
@@ -25,9 +25,9 @@ const Components = {
     "ClaimDocuments",
     path.resolve("./components/claim-documents.jsx")
   ),
-  WrsConversationView: componentLoader.add(
-    "WrsConversationView",
-    path.resolve("./components/wrs-conversation-view.jsx")
+  WrsProConversationView: componentLoader.add(
+    "WrsProConversationView",
+    path.resolve("./components/wrspro-conversation-view.jsx")
   ),
   CalendarView: componentLoader.add(
     "CalendarView",
@@ -52,6 +52,14 @@ const Components = {
   Dashboard: componentLoader.add(
     "Dashboard",
     path.resolve("./components/dashboard.jsx")
+  ),
+  ReviewLoan: componentLoader.add(
+    "ReviewLoan",
+    path.resolve("./components/review-loan.jsx")
+  ),
+  LoanDocuments: componentLoader.add(
+    "LoanDocuments",
+    path.resolve("./components/loan-documents.jsx")
   ),
 };
 
@@ -164,7 +172,7 @@ const adminOptions = {
           reviewClaim: {
             actionType: "record",
             icon: "FileText",
-            label: "Review Claim",
+            label: "Review",
             component: Components.ReviewClaim,
             showInDrawer: false,
             handler: async (request, response, context) => {
@@ -176,70 +184,9 @@ const adminOptions = {
                 };
               }
 
-              const {
-                actionType,
-                claimed_amount,
-                approved_amount,
-                payment_date,
-              } = request.payload;
-              const now = new Date();
-
-              try {
-                if (actionType === "approve") {
-                  await prisma.claims.update({
-                    where: { id: record.id() },
-                    data: {
-                      status: "approved",
-                      approval_date: now,
-                      updated_at: now,
-                      payment_date: payment_date
-                        ? new Date(payment_date)
-                        : null,
-                      claimed_amount: claimed_amount
-                        ? parseFloat(claimed_amount)
-                        : null,
-                      approved_amount: approved_amount
-                        ? parseFloat(approved_amount)
-                        : null,
-                    },
-                  });
-                } else if (actionType === "reject") {
-                  await prisma.claims.update({
-                    where: { id: record.id() },
-                    data: {
-                      status: "rejected",
-                      updated_at: now,
-                    },
-                  });
-                }
-
-                // Create status update trail
-                await prisma.status_updates.create({
-                  data: {
-                    claim_id: record.id(),
-                    update_type: "review",
-                    old_status: record.params.status || "draft",
-                    new_status:
-                      actionType === "approve" ? "approved" : "rejected",
-                    message_text: `Claim ${new_status} by admin`,
-                    created_at: now,
-                  },
-                });
-
-                return {
-                  record: record.toJSON(currentAdmin),
-                  redirectUrl: `/admin/resources/claims`,
-                  notice: {
-                    message: `Claim ${
-                      actionType === "approve" ? "approved" : "rejected"
-                    } successfully`,
-                    type: "success",
-                  },
-                };
-              } catch (error) {
-                console.error("Error reviewing claim:", error);
-                throw new Error("Failed to update claim status");
-              }
+              return {
+                record: record.toJSON(currentAdmin),
+              };
             },
           },
         },
@@ -365,7 +312,7 @@ const adminOptions = {
             actionType: "record",
             icon: "MessageSquare",
             label: "View Messages",
-            component: Components.ConversationView,
+            component: Components.InsuraWizConversationView,
             showInDrawer: false,
             handler: async (request, response, context) => {
               return {
@@ -715,7 +662,7 @@ const adminOptions = {
             actionType: "record",
             icon: "MessageSquare",
             label: "View Messages",
-            component: Components.WrsConversationView,
+            component: Components.WrsProConversationView,
             showInDrawer: false,
             handler: async (request, response, context) => {
               return {
@@ -1212,6 +1159,22 @@ const adminOptions = {
           "status",
           "created_at",
         ],
+        actions: {
+          reviewLoan: {
+            actionType: "record",
+            icon: "FileText",
+            label: "Review",
+            component: Components.ReviewLoan,
+            showInDrawer: false,
+            handler: async (request, response, context) => {
+              const { record, currentAdmin } = context;
+
+              return {
+                record: record.toJSON(currentAdmin),
+              };
+            },
+          },
+        },
       },
     },
     {

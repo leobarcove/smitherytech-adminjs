@@ -31,7 +31,7 @@ const WrsConversationView = (props) => {
   const fetchMessages = async () => {
     try {
       const response = await fetch(
-        `/admin/api/wrs-conversations/${sessionId}/messages`
+        `/admin/api/wrspro/conversations/${sessionId}/messages`
       );
       const data = await response.json();
 

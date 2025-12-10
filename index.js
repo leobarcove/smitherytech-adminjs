@@ -18,6 +18,8 @@ const PgSession = connectPgSimple(session);
 
 const start = async () => {
   const app = express();
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   const admin = new AdminJS(adminOptions);
 
@@ -63,410 +65,171 @@ const start = async () => {
     }
   );
 
-  // Page to view conversation messages
-  app.get("/admin/conversations/:sessionId/view", async (req, res) => {
-    try {
-      const { sessionId } = req.params;
+  app.get(
+    "/admin/api/insurawiz/conversations/:sessionId/messages",
+    async (req, res) => {
+      try {
+        const { sessionId } = req.params;
 
-      // Fetch session details
-      const session = await prisma.conversation_sessions.findUnique({
-        where: { id: sessionId },
-      });
+        // Fetch session details
+        const session = await prisma.conversation_sessions.findUnique({
+          where: { id: sessionId },
+        });
 
-      if (!session) {
-        return res.status(404).send(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Session Not Found</title>
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  padding: 40px;
-                  background: #f5f5f5;
-                }
-                .error {
-                  background: white;
-                  padding: 30px;
-                  border-radius: 8px;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                  max-width: 600px;
-                  margin: 0 auto;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="error">
-                <h1>Session Not Found</h1>
-                <p>The conversation session you're looking for doesn't exist.</p>
-                <a href="/admin">Back to Dashboard</a>
-              </div>
-            </body>
-          </html>
-        `);
+        if (!session) {
+          return res.status(404).json({
+            success: false,
+            error: "Conversation session not found",
+          });
+        }
+
+        // Fetch messages for this session
+        const messages = await prisma.messages.findMany({
+          where: {
+            session_id: sessionId,
+          },
+          orderBy: {
+            created_at: "asc",
+          },
+        });
+
+        res.json({
+          success: true,
+          session,
+          messages,
+        });
+      } catch (error) {
+        console.error("Error fetching conversation messages:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to fetch messages",
+        });
       }
-
-      // Fetch messages for this session
-      const messages = await prisma.messages.findMany({
-        where: {
-          session_id: sessionId,
-        },
-        orderBy: {
-          created_at: "asc",
-        },
-      });
-
-      // Render HTML page with messages
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Conversation Messages - ${sessionId}</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
-
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                background: #f5f7fa;
-                color: #2d3748;
-                line-height: 1.6;
-              }
-
-              .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 20px;
-              }
-
-              .header {
-                background: white;
-                padding: 20px 30px;
-                border-radius: 8px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                margin-bottom: 20px;
-              }
-
-              .header h1 {
-                font-size: 24px;
-                color: #1a202c;
-                margin-bottom: 10px;
-              }
-
-              .session-info {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-                margin-top: 15px;
-                padding-top: 15px;
-                border-top: 1px solid #e2e8f0;
-              }
-
-              .info-item {
-                display: flex;
-                flex-direction: column;
-              }
-
-              .info-label {
-                font-size: 12px;
-                color: #718096;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 4px;
-              }
-
-              .info-value {
-                font-size: 14px;
-                color: #2d3748;
-                font-weight: 500;
-              }
-
-              .back-button {
-                display: inline-block;
-                padding: 8px 16px;
-                background: #4299e1;
-                color: white;
-                text-decoration: none;
-                border-radius: 6px;
-                font-size: 14px;
-                transition: background 0.2s;
-                margin-bottom: 20px;
-              }
-
-              .back-button:hover {
-                background: #3182ce;
-              }
-
-              .messages-container {
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                padding: 20px;
-              }
-
-              .messages-header {
-                font-size: 18px;
-                font-weight: 600;
-                color: #1a202c;
-                margin-bottom: 20px;
-                padding-bottom: 15px;
-                border-bottom: 2px solid #e2e8f0;
-              }
-
-              .message {
-                padding: 15px;
-                margin-bottom: 15px;
-                border-radius: 8px;
-                border-left: 4px solid #e2e8f0;
-                background: #f7fafc;
-              }
-
-              .message.user {
-                border-left-color: #4299e1;
-                background: #ebf8ff;
-              }
-
-              .message.bot {
-                border-left-color: #48bb78;
-                background: #f0fff4;
-              }
-
-              .message-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 10px;
-              }
-
-              .message-role {
-                font-weight: 600;
-                font-size: 14px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-              }
-
-              .message.user .message-role {
-                color: #2c5282;
-              }
-
-              .message.bot .message-role {
-                color: #276749;
-              }
-
-              .message-time {
-                font-size: 12px;
-                color: #718096;
-              }
-
-              .message-content {
-                color: #2d3748;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                line-height: 1.6;
-              }
-
-              .empty-state {
-                text-align: center;
-                padding: 60px 20px;
-                color: #718096;
-              }
-
-              .empty-state svg {
-                width: 64px;
-                height: 64px;
-                margin-bottom: 16px;
-                opacity: 0.5;
-              }
-
-              @media (max-width: 768px) {
-                .container {
-                  padding: 10px;
-                }
-
-                .header, .messages-container {
-                  padding: 15px;
-                }
-
-                .session-info {
-                  grid-template-columns: 1fr;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <a href="/admin/resources/conversation_sessions" class="back-button">← Back to Conversation Sessions</a>
-
-              <div class="header">
-                <h1>Conversation Messages</h1>
-                <div class="session-info">
-                  <div class="info-item">
-                    <div class="info-label">Session ID</div>
-                    <div class="info-value">${session.id}</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Telegram Chat ID</div>
-                    <div class="info-value">${
-                      session.telegram_chat_id || "N/A"
-                    }</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Current State</div>
-                    <div class="info-value">${
-                      session.current_state || "N/A"
-                    }</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Created At</div>
-                    <div class="info-value">${new Date(
-                      session.created_at
-                    ).toLocaleString()}</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Last Interaction</div>
-                    <div class="info-value">${
-                      session.last_interaction
-                        ? new Date(session.last_interaction).toLocaleString()
-                        : "N/A"
-                    }</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Total Messages</div>
-                    <div class="info-value">${messages.length}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="messages-container">
-                <div class="messages-header">
-                  Messages History
-                </div>
-                ${
-                  messages.length > 0
-                    ? messages
-                        .map(
-                          (msg) => `
-                  <div class="message ${msg.role}">
-                    <div class="message-header">
-                      <span class="message-role">${msg.role}</span>
-                      <span class="message-time">${new Date(
-                        msg.created_at
-                      ).toLocaleString()}</span>
-                    </div>
-                    <div class="message-content">${escapeHtml(
-                      msg.content
-                    )}</div>
-                  </div>
-                `
-                        )
-                        .join("")
-                    : `
-                  <div class="empty-state">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <h3>No messages yet</h3>
-                    <p>This conversation session doesn't have any messages.</p>
-                  </div>
-                `
-                }
-              </div>
-            </div>
-          </body>
-        </html>
-      `);
-    } catch (error) {
-      console.error("Error fetching conversation messages:", error);
-      res.status(500).send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Error</title>
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                padding: 40px;
-                background: #f5f5f5;
-              }
-              .error {
-                background: white;
-                padding: 30px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                max-width: 600px;
-                margin: 0 auto;
-                color: #e53e3e;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="error">
-              <h1>Error</h1>
-              <p>Failed to load conversation messages. Please try again later.</p>
-              <a href="/admin">Back to Dashboard</a>
-            </div>
-          </body>
-        </html>
-      `);
     }
-  });
+  );
 
-  // Helper function to escape HTML
-  function escapeHtml(text) {
-    const map = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;",
-    };
-    return text.replace(/[&<>"']/g, (m) => map[m]);
-  }
-
-  // API endpoint to fetch conversation messages
-  app.get("/admin/api/conversations/:sessionId/messages", async (req, res) => {
+  app.post("/admin/api/insurawiz/claims/:claimId/review", async (req, res) => {
     try {
-      const { sessionId } = req.params;
+      const { claimId } = req.params;
+      const { actionType, claimed_amount, approved_amount, payment_date } =
+        req.body;
 
-      // Fetch session details
-      const session = await prisma.conversation_sessions.findUnique({
-        where: { id: sessionId },
+      const now = new Date();
+      const claim = await prisma.claims.findUnique({
+        where: { id: claimId },
       });
 
-      if (!session) {
+      if (!claim) {
         return res.status(404).json({
           success: false,
-          error: "Conversation session not found",
+          error: "Claim not found",
         });
       }
 
-      // Fetch messages for this session
-      const messages = await prisma.messages.findMany({
-        where: {
-          session_id: sessionId,
-        },
-        orderBy: {
-          created_at: "asc",
+      if (actionType === "approve") {
+        await prisma.claims.update({
+          where: { id: claimId },
+          data: {
+            status: "approved",
+            approval_date: now,
+            updated_at: now,
+            payment_date: payment_date ? new Date(payment_date) : null,
+            claimed_amount: claimed_amount ? parseFloat(claimed_amount) : null,
+            approved_amount: approved_amount
+              ? parseFloat(approved_amount)
+              : null,
+          },
+        });
+      } else if (actionType === "reject") {
+        await prisma.claims.update({
+          where: { id: claimId },
+          data: {
+            status: "rejected",
+            updated_at: now,
+          },
+        });
+      }
+
+      const newStatus = actionType === "approve" ? "approved" : "rejected";
+      await prisma.status_updates.create({
+        data: {
+          claim_id: claimId,
+          update_type: "review",
+          old_status: claim.status || "draft",
+          new_status: newStatus,
+          message_text: `Claim ${newStatus} by admin`,
+          created_at: now,
         },
       });
 
       res.json({
         success: true,
-        session,
-        messages,
+        message: `Claim ${newStatus} successfully`,
       });
     } catch (error) {
-      console.error("Error fetching conversation messages:", error);
+      console.error("Error reviewing claim:", error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch messages",
+        error: "Failed to update claim status",
       });
     }
   });
+
+  app.get(
+    "/admin/api/wrspro/conversations/:sessionId/messages",
+    async (req, res) => {
+      try {
+        const { sessionId } = req.params;
+
+        // Fetch session details
+        const session = await prisma.wrs_pro_chat_sessions.findUnique({
+          where: { id: sessionId },
+        });
+
+        if (!session) {
+          return res.status(404).json({
+            success: false,
+            error: "Conversation session not found",
+          });
+        }
+
+        // Fetch messages for this session
+        const wrsMessages = await prisma.wrs_pro_chat_history.findMany({
+          where: { session_id: sessionId },
+          orderBy: { created_at: "asc" },
+        });
+
+        // Map WRS messages to standard format
+        const messages = wrsMessages.map((msg) => ({
+          role: msg.message_direction === "incoming" ? "user" : "bot",
+          content:
+            msg.message_content ||
+            (msg.message_data ? JSON.stringify(msg.message_data) : ""),
+          created_at: msg.created_at,
+        }));
+
+        // Normalize session for frontend
+        const normalizedSession = {
+          ...session,
+          telegram_user_id: session.telegram_chat_id,
+          last_message_at: session.last_message_at,
+          status: session.current_state,
+        };
+
+        res.json({
+          success: true,
+          session: normalizedSession,
+          messages,
+        });
+      } catch (error) {
+        console.error("Error fetching WRS conversation messages:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to fetch messages",
+        });
+      }
+    }
+  );
 
   app.put(
     "/admin/api/slotiva/appointments/:appointmentId/cancel",
@@ -643,424 +406,8 @@ const start = async () => {
     }
   });
 
-  // WRS Pro Conversation Routes
-
-  // Page to view WRS Pro conversation messages
-  app.get("/admin/wrs-conversations/:sessionId/view", async (req, res) => {
-    try {
-      const { sessionId } = req.params;
-
-      // Fetch session details
-      const session = await prisma.wrs_pro_chat_sessions.findUnique({
-        where: { id: sessionId },
-      });
-
-      if (!session) {
-        return res.status(404).send(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Session Not Found</title>
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  padding: 40px;
-                  background: #f5f5f5;
-                }
-                .error {
-                  background: white;
-                  padding: 30px;
-                  border-radius: 8px;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                  max-width: 600px;
-                  margin: 0 auto;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="error">
-                <h1>Session Not Found</h1>
-                <p>The conversation session you're looking for doesn't exist.</p>
-                <a href="/admin">Back to Dashboard</a>
-              </div>
-            </body>
-          </html>
-        `);
-      }
-
-      // Fetch messages for this session
-      const wrsMessages = await prisma.wrs_pro_chat_history.findMany({
-        where: { session_id: sessionId },
-        orderBy: { created_at: "asc" },
-      });
-
-      // Map WRS messages to standard format for display
-      const messages = wrsMessages.map((msg) => ({
-        role: msg.message_direction === "incoming" ? "user" : "bot",
-        content:
-          msg.message_content ||
-          (msg.message_data ? JSON.stringify(msg.message_data) : ""),
-        created_at: msg.created_at,
-      }));
-
-      // Render HTML page with messages
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Conversation Messages - ${sessionId}</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
-
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                background: #f5f7fa;
-                color: #2d3748;
-                line-height: 1.6;
-              }
-
-              .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 20px;
-              }
-
-              .header {
-                background: white;
-                padding: 20px 30px;
-                border-radius: 8px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                margin-bottom: 20px;
-              }
-
-              .header h1 {
-                font-size: 24px;
-                color: #1a202c;
-                margin-bottom: 10px;
-              }
-
-              .session-info {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-                margin-top: 15px;
-                padding-top: 15px;
-                border-top: 1px solid #e2e8f0;
-              }
-
-              .info-item {
-                display: flex;
-                flex-direction: column;
-              }
-
-              .info-label {
-                font-size: 12px;
-                color: #718096;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 4px;
-              }
-
-              .info-value {
-                font-size: 14px;
-                color: #2d3748;
-                font-weight: 500;
-              }
-
-              .back-button {
-                display: inline-block;
-                padding: 8px 16px;
-                background: #4299e1;
-                color: white;
-                text-decoration: none;
-                border-radius: 6px;
-                font-size: 14px;
-                transition: background 0.2s;
-                margin-bottom: 20px;
-              }
-
-              .back-button:hover {
-                background: #3182ce;
-              }
-
-              .messages-container {
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                padding: 20px;
-              }
-
-              .messages-header {
-                font-size: 18px;
-                font-weight: 600;
-                color: #1a202c;
-                margin-bottom: 20px;
-                padding-bottom: 15px;
-                border-bottom: 2px solid #e2e8f0;
-              }
-
-              .message {
-                padding: 15px;
-                margin-bottom: 15px;
-                border-radius: 8px;
-                border-left: 4px solid #e2e8f0;
-                background: #f7fafc;
-              }
-
-              .message.user {
-                border-left-color: #4299e1;
-                background: #ebf8ff;
-              }
-
-              .message.bot {
-                border-left-color: #48bb78;
-                background: #f0fff4;
-              }
-
-              .message-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 10px;
-              }
-
-              .message-role {
-                font-weight: 600;
-                font-size: 14px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-              }
-
-              .message.user .message-role {
-                color: #2c5282;
-              }
-
-              .message.bot .message-role {
-                color: #276749;
-              }
-
-              .message-time {
-                font-size: 12px;
-                color: #718096;
-              }
-
-              .message-content {
-                color: #2d3748;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                line-height: 1.6;
-              }
-
-              .empty-state {
-                text-align: center;
-                padding: 60px 20px;
-                color: #718096;
-              }
-
-              .empty-state svg {
-                width: 64px;
-                height: 64px;
-                margin-bottom: 16px;
-                opacity: 0.5;
-              }
-
-              @media (max-width: 768px) {
-                .container {
-                  padding: 10px;
-                }
-
-                .header, .messages-container {
-                  padding: 15px;
-                }
-
-                .session-info {
-                  grid-template-columns: 1fr;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <a href="/admin/resources/wrs_pro_chat_sessions" class="back-button">← Back to WRS Pro Chat Sessions</a>
-
-              <div class="header">
-                <h1>Conversation Messages</h1>
-                <div class="session-info">
-                  <div class="info-item">
-                    <div class="info-label">Session ID</div>
-                    <div class="info-value">${session.id}</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Telegram Chat ID</div>
-                    <div class="info-value">${
-                      session.telegram_chat_id || "N/A"
-                    }</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Current State</div>
-                    <div class="info-value">${
-                      session.current_state || "N/A"
-                    }</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Created At</div>
-                    <div class="info-value">${new Date(
-                      session.created_at
-                    ).toLocaleString()}</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Last Interaction</div>
-                    <div class="info-value">${
-                      session.last_message_at
-                        ? new Date(session.last_message_at).toLocaleString()
-                        : "N/A"
-                    }</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-label">Total Messages</div>
-                    <div class="info-value">${messages.length}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="messages-container">
-                <div class="messages-header">
-                  Messages History
-                </div>
-                ${
-                  messages.length > 0
-                    ? messages
-                        .map(
-                          (msg) => `
-                  <div class="message ${msg.role}">
-                    <div class="message-header">
-                      <span class="message-role">${msg.role}</span>
-                      <span class="message-time">${new Date(
-                        msg.created_at
-                      ).toLocaleString()}</span>
-                    </div>
-                    <div class="message-content">${escapeHtml(
-                      msg.content
-                    )}</div>
-                  </div>
-                `
-                        )
-                        .join("")
-                    : `
-                  <div class="empty-state">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <h3>No messages yet</h3>
-                    <p>This conversation session doesn't have any messages.</p>
-                  </div>
-                `
-                }
-              </div>
-            </div>
-          </body>
-        </html>
-      `);
-    } catch (error) {
-      console.error("Error fetching WRS conversation messages:", error);
-      res.status(500).send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Error</title>
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                padding: 40px;
-                background: #f5f5f5;
-              }
-              .error {
-                background: white;
-                padding: 30px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                max-width: 600px;
-                margin: 0 auto;
-                color: #e53e3e;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="error">
-              <h1>Error</h1>
-              <p>Failed to load conversation messages. Please try again later.</p>
-              <a href="/admin">Back to Dashboard</a>
-            </div>
-          </body>
-        </html>
-      `);
-    }
-  });
-
-  // API endpoint to fetch WRS Pro conversation messages
   app.get(
-    "/admin/api/wrs-conversations/:sessionId/messages",
-    async (req, res) => {
-      try {
-        const { sessionId } = req.params;
-
-        // Fetch session details
-        const session = await prisma.wrs_pro_chat_sessions.findUnique({
-          where: { id: sessionId },
-        });
-
-        if (!session) {
-          return res.status(404).json({
-            success: false,
-            error: "Conversation session not found",
-          });
-        }
-
-        // Fetch messages for this session
-        const wrsMessages = await prisma.wrs_pro_chat_history.findMany({
-          where: { session_id: sessionId },
-          orderBy: { created_at: "asc" },
-        });
-
-        // Map WRS messages to standard format
-        const messages = wrsMessages.map((msg) => ({
-          role: msg.message_direction === "incoming" ? "user" : "bot",
-          content:
-            msg.message_content ||
-            (msg.message_data ? JSON.stringify(msg.message_data) : ""),
-          created_at: msg.created_at,
-        }));
-
-        // Normalize session for frontend
-        const normalizedSession = {
-          ...session,
-          telegram_user_id: session.telegram_chat_id,
-          last_message_at: session.last_message_at,
-          status: session.current_state,
-        };
-
-        res.json({
-          success: true,
-          session: normalizedSession,
-          messages,
-        });
-      } catch (error) {
-        console.error("Error fetching WRS conversation messages:", error);
-        res.status(500).json({
-          success: false,
-          error: "Failed to fetch messages",
-        });
-      }
-    }
-  );
-
-  app.get(
-    "/admin/api/lendlyx-conversations/:sessionId/messages",
+    "/admin/api/lendlyx/conversations/:sessionId/messages",
     async (req, res) => {
       try {
         const { sessionId } = req.params;
@@ -1093,6 +440,104 @@ const start = async () => {
         res.status(500).json({
           success: false,
           error: "Failed to fetch messages",
+        });
+      }
+    }
+  );
+
+  app.post(
+    "/admin/api/lendlyx/applications/:applicationId/review",
+    async (req, res) => {
+      try {
+        const { applicationId } = req.params;
+        const { actionType, tenure_months, interest_rate, remarks } = req.body;
+        const now = new Date();
+
+        if (!remarks || remarks.trim() === "") {
+          return res.status(400).json({
+            success: false,
+            error: "Remarks are required",
+          });
+        }
+
+        const application = await prisma.lend_lyx_applications.findUnique({
+          where: { id: applicationId },
+        });
+
+        if (!application) {
+          return res.status(404).json({
+            success: false,
+            error: "Loan application not found",
+          });
+        }
+
+        if (actionType === "approve") {
+          if (!tenure_months || !interest_rate) {
+            return res.status(400).json({
+              success: false,
+              error:
+                "Tenure months and interest rate are required for approval",
+            });
+          }
+
+          await prisma.lend_lyx_applications.update({
+            where: { id: applicationId },
+            data: {
+              status: "approved",
+              tenure_months: parseInt(tenure_months),
+              interest_rate: parseFloat(interest_rate),
+              remarks: remarks,
+              updated_at: now,
+            },
+          });
+        } else if (actionType === "reject") {
+          await prisma.lend_lyx_applications.update({
+            where: { id: applicationId },
+            data: {
+              status: "rejected",
+              remarks: remarks,
+              updated_at: now,
+            },
+          });
+        }
+
+        // Notify customer on approval status
+        const applicant = await prisma.lend_lyx_applicants.findFirst({
+          where: { application_id: applicationId },
+        });
+        const session = await prisma.lend_lyx_chat_sessions.findUnique({
+          where: { id: applicant.session_id },
+        });
+        await fetch(
+          "https://smitherytech.zeabur.app/webhook/8a154e80-a633-4910-919e-e71f6e15c5d6",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ref: application.reference_no,
+              cid: session.telegram_chat_id,
+              sid: session.id,
+              is_approved: actionType === "approve",
+              amount: application.loan_amount,
+              tenure: application.tenure_months,
+              rate: application.interest_rate,
+            }),
+          }
+        );
+
+        res.json({
+          success: true,
+          message: `Loan application ${
+            actionType === "approve" ? "approved" : "rejected"
+          } successfully`,
+        });
+      } catch (error) {
+        console.error("Error reviewing loan application:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to update loan application status",
         });
       }
     }
