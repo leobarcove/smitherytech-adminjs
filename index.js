@@ -521,7 +521,8 @@ const start = async () => {
         if (newStart < todayMidnight) {
           return res.status(400).json({
             success: false,
-            error: "Appointments can only be rescheduled for today or future dates.",
+            error:
+              "Appointments can only be rescheduled for today or future dates.",
           });
         }
 
@@ -1050,6 +1051,45 @@ const start = async () => {
         });
       } catch (error) {
         console.error("Error fetching WRS conversation messages:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to fetch messages",
+        });
+      }
+    }
+  );
+
+  app.get(
+    "/admin/api/lendlyx-conversations/:sessionId/messages",
+    async (req, res) => {
+      try {
+        const { sessionId } = req.params;
+
+        // Fetch session details
+        const session = await prisma.lend_lyx_chat_sessions.findUnique({
+          where: { id: sessionId },
+        });
+
+        if (!session) {
+          return res.status(404).json({
+            success: false,
+            error: "Conversation session not found",
+          });
+        }
+
+        // Fetch messages for this session
+        const lendlyxMessages = await prisma.lend_lyx_chat_messages.findMany({
+          where: { session_id: sessionId },
+          orderBy: { created_at: "asc" },
+        });
+
+        res.json({
+          success: true,
+          session,
+          messages: lendlyxMessages,
+        });
+      } catch (error) {
+        console.error("Error fetching LendLyx conversation messages:", error);
         res.status(500).json({
           success: false,
           error: "Failed to fetch messages",
