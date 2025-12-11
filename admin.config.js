@@ -69,6 +69,9 @@ const prisma = new PrismaClient();
 const dmmf = prisma._baseDmmf || prisma._dmmf;
 
 const adminOptions = {
+  assets: {
+    styles: ["/styles.css"],
+  },
   rootPath: "/admin",
   componentLoader,
   dashboard: {

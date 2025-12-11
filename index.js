@@ -1,4 +1,6 @@
 import "dotenv/config";
+import * as url from "url";
+import * as path from "path";
 import express from "express";
 import session from "express-session";
 import AdminJS from "adminjs";
@@ -6,7 +8,6 @@ import { buildAuthenticatedRouter } from "@adminjs/express";
 import argon2 from "argon2";
 import connectPgSimple from "connect-pg-simple";
 import { adminOptions, prisma } from "./admin.config.js";
-import { dashboardHandler } from "./dashboard-handler.js";
 
 // Fix BigInt serialization for JSON
 BigInt.prototype.toJSON = function () {
@@ -15,11 +16,13 @@ BigInt.prototype.toJSON = function () {
 
 const PORT = process.env.PORT || 3000;
 const PgSession = connectPgSimple(session);
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const start = async () => {
   const app = express();
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(express.static(path.join(__dirname, "public")));
 
   const admin = new AdminJS(adminOptions);
 
