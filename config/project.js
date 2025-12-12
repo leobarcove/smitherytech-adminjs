@@ -8,7 +8,6 @@ export const projectConfig = {
     logo: "../../images/logo.png",
     softwareBrothers: false,
     withMadeWithLove: false,
-
     theme: {
       colors: {
         primary100: "#1A365D",

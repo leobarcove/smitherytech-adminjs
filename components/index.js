@@ -3,6 +3,8 @@ import path from "path";
 
 const componentLoader = new ComponentLoader();
 
+// componentLoader.override('Login', path.resolve(""));
+
 const Components = {
   InsuraWizConversationView: componentLoader.add(
     "InsuraWizConversationView",

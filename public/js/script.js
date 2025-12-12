@@ -13,6 +13,10 @@ function setCurrentModule() {
     const parent = resource.closest("li").parentElement.parentElement;
     const module = parent.querySelector("a");
     module.classList.add("adminjs_active");
+
+    const version = document.querySelector("section.adminjs_Version");
+    const title = module.querySelector('span + div').textContent.trim();
+    version.innerHTML = title;
   }
 }
 
