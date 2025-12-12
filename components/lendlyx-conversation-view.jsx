@@ -2,6 +2,11 @@ import { useEffect, useState, useRef } from "react";
 import { Box, Text, Loader, Icon } from "@adminjs/design-system";
 import { useNotice } from "adminjs";
 
+import { projectConfig } from "../config/project.js";
+
+const colorPrimary =
+  projectConfig?.branding?.theme?.colors?.primary100 || "#3040D6";
+
 const LendLyxConversationView = (props) => {
   const { record } = props;
   const sessionId = record?.params?.id;
@@ -139,7 +144,7 @@ const LendLyxConversationView = (props) => {
                   width: "48px",
                   height: "48px",
                   borderRadius: "50%",
-                  backgroundColor: "#3040D6",
+                  backgroundColor: colorPrimary,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -241,7 +246,7 @@ const LendLyxConversationView = (props) => {
                         ? "#f3f4f6"
                         : isBot
                         ? "white"
-                        : "#3040D6",
+                        : colorPrimary,
                       borderRadius: isSystem
                         ? "8px"
                         : isBot
@@ -311,7 +316,7 @@ const LendLyxConversationView = (props) => {
               width: "48px",
               height: "48px",
               borderRadius: "50%",
-              backgroundColor: "#3040D6",
+              backgroundColor: colorPrimary,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -356,7 +361,6 @@ const LendLyxConversationView = (props) => {
           style={{
             position: "sticky",
             bottom: 0,
-            marginTop: "24px",
           }}
         >
           <Box

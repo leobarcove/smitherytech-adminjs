@@ -1,0 +1,53 @@
+:root {
+  --topbar-color: #fff;
+}
+
+* {
+  font-family: Franklin Gothic, Arial Bold !important;
+}
+
+::-webkit-scrollbar {
+  width: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  border: 5px solid #fff;
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+section[data-css="sidebar"] {
+  scrollbar-gutter: stable both-edges;
+}
+
+section[data-css="sidebar-resources"] {
+  margin: 0 -16px;
+}
+
+a.adminjs_Button,
+input.adminjs_Input,
+button.adminjs_Button,
+section.adminjs_Section,
+.react-datepicker-wrapper,
+section.adminjs_Pagination,
+section.adminjs_Box.adminjs_DropDownMenu,
+div.adminjs_Select > div[class*="control"] {
+  border-radius: 12px !important;
+}
+
+a.adminjs_active {
+  border-left: 4px solid #888 !important;
+  background-color: #f5f5f5 !important;
+}
+
+a.adminjs_active span.adminjs_Icon > svg {
+  transition: transform 0.2s ease-in-out !important;
+}
+
+a.adminjs_active:hover span.adminjs_Icon > svg {
+  transform: scale(1.1);
+}

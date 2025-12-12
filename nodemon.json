@@ -1,0 +1,5 @@
+{
+  "watch": ["index.js", "admin.config.js", "components", "resources", "config"],
+  "ext": "js,jsx,json,ts",
+  "exec": "npx rimraf .adminjs && node index.js"
+}

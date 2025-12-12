@@ -1,7 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Header, Label, Link, Loader, Text } from "@adminjs/design-system";
 import { ApiClient } from "adminjs";
 import FileUrlDisplay from "./file-url-display";
+
+import { projectConfig } from "../config/project.js";
+
+const colorPrimary =
+  projectConfig?.branding?.theme?.colors?.primary100 || "#3040D6";
 
 const api = new ApiClient();
 
@@ -404,7 +409,7 @@ const ClaimDocuments = (props) => {
           mb={index === documentsWithParams.length - 1 ? "" : "xxl"}
           p="lg"
           style={{
-            borderLeft: "3px solid #3040D6",
+            borderLeft: `3px solid ${colorPrimary}`,
             backgroundColor: "#f8f9fa",
             borderRadius: "4px",
             overflow: "hidden",
@@ -438,7 +443,7 @@ const ClaimDocuments = (props) => {
               <Box
                 style={{
                   padding: "4px 12px",
-                  backgroundColor: "#3040D6",
+                  backgroundColor: colorPrimary,
                   color: "white",
                   borderRadius: "12px",
                   fontSize: "12px",

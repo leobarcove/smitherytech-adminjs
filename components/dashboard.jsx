@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, H2, Text, Icon, Loader } from "@adminjs/design-system";
 import { ApiClient } from "adminjs";
+import { projectConfig } from "../config/project";
 
 const api = new ApiClient();
 
@@ -31,6 +32,33 @@ const STATUS_COLORS = {
 
   draft: COLORS.neutral_light,
   unknown: COLORS.neutral_light,
+};
+
+const MODULE_CARDS = {
+  insurawiz: {
+    title: "Insura Wiz",
+    description: "Manage claims and active policies",
+    icon: "Shield",
+    href: "/admin/resources/claims",
+  },
+  wrspro: {
+    title: "WRS Pro",
+    description: "Track warranties and campaigns",
+    icon: "Tag",
+    href: "/admin/resources/wrs_pro_registrations",
+  },
+  slotiva: {
+    title: "Slotiva",
+    description: "Monitor appointments and services",
+    icon: "Calendar",
+    href: "/admin/resources/slotiva_appointments",
+  },
+  lendlyx: {
+    title: "Lend Lyx",
+    description: "Manage loans and applicants",
+    icon: "DollarSign",
+    href: "/admin/resources/lend_lyx_applications",
+  },
 };
 
 const DonutChart = ({ distribution, total, size = 140, strokeWidth = 12 }) => {
@@ -379,38 +407,22 @@ const Dashboard = () => {
       </Box>
 
       <Box flex flexDirection="row" flexWrap="wrap" style={{ gap: "24px" }}>
-        <ModuleAnalyticsCard
-          title="Insura Wiz"
-          description="Manage claims and active policies"
-          icon="Shield"
-          color={COLORS.info}
-          data={stats.insurawiz || {}}
-          href="/admin/resources/claims"
-        />
-        <ModuleAnalyticsCard
-          title="WRS Pro"
-          description="Track warranties and campaigns"
-          icon="Tag"
-          color={COLORS.info}
-          data={stats.wrspro || {}}
-          href="/admin/resources/wrs_pro_registrations"
-        />
-        <ModuleAnalyticsCard
-          title="Slotiva"
-          description="Monitor appointments and services"
-          icon="Calendar"
-          color={COLORS.info}
-          data={stats.slotiva || {}}
-          href="/admin/resources/slotiva_appointments"
-        />
-        <ModuleAnalyticsCard
-          title="Lend Lyx"
-          description="Manage loans and applicants"
-          icon="DollarSign"
-          color={COLORS.info}
-          data={stats.lendlyx || {}}
-          href="/admin/resources/lend_lyx_applications"
-        />
+        {Object.entries(projectConfig.modules)
+          .filter(([key, enabled]) => enabled && MODULE_CARDS[key])
+          .map(([key]) => {
+            const cardConfig = MODULE_CARDS[key];
+            return (
+              <ModuleAnalyticsCard
+                key={key}
+                title={cardConfig.title}
+                description={cardConfig.description}
+                icon={cardConfig.icon}
+                color={COLORS.info}
+                data={stats[key] || {}}
+                href={cardConfig.href}
+              />
+            );
+          })}
       </Box>
     </Box>
   );

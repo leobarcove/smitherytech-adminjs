@@ -1,8 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Box, Text, Loader, Icon } from "@adminjs/design-system";
-import { ApiClient, useNotice } from "adminjs";
+import { useNotice } from "adminjs";
 
-const api = new ApiClient();
+import { projectConfig } from "../config/project.js";
+
+const colorPrimary =
+  projectConfig?.branding?.theme?.colors?.primary100 || "#3040D6";
 
 const WrsConversationView = (props) => {
   const { record } = props;
@@ -145,7 +148,7 @@ const WrsConversationView = (props) => {
                   width: "48px",
                   height: "48px",
                   borderRadius: "50%",
-                  backgroundColor: "#3040D6",
+                  backgroundColor: colorPrimary,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -237,7 +240,7 @@ const WrsConversationView = (props) => {
                   <Box
                     style={{
                       maxWidth: "70%",
-                      backgroundColor: isBot ? "white" : "#3040D6",
+                      backgroundColor: isBot ? "white" : colorPrimary,
                       borderRadius: isBot
                         ? "0 16px 16px 16px"
                         : "16px 0 16px 16px",
@@ -308,24 +311,24 @@ const WrsConversationView = (props) => {
               width: "48px",
               height: "48px",
               borderRadius: "50%",
-              backgroundColor: "#3040D6",
+              backgroundColor: colorPrimary,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(76, 111, 255, 0.4)",
+              boxShadow: "0 4px 12px rgba(255, 255, 255, 0.4)",
               zIndex: 1000,
               transition: "all 0.2s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "scale(1.1)";
               e.currentTarget.style.boxShadow =
-                "0 6px 16px rgba(76, 111, 255, 0.5)";
+                "0 6px 16px rgba(255, 255, 255, 0.5)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "scale(1)";
               e.currentTarget.style.boxShadow =
-                "0 4px 12px rgba(76, 111, 255, 0.4)";
+                "0 4px 12px rgba(255, 255, 255, 0.4)";
             }}
           >
             <svg
@@ -353,7 +356,6 @@ const WrsConversationView = (props) => {
           style={{
             position: "sticky",
             bottom: 0,
-            marginTop: "24px",
           }}
         >
           <Box
