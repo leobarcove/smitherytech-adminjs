@@ -1,16 +1,11 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Header, Label, Link, Loader, Text } from "@adminjs/design-system";
 import { ApiClient } from "adminjs";
 import FileUrlDisplay from "./file-url-display";
 
-import { projectConfig } from "../config/project.js";
-
-const colorPrimary =
-  projectConfig?.branding?.theme?.colors?.primary100 || "#3040D6";
-
 const api = new ApiClient();
 
-const ClaimDocuments = (props) => {
+const LoanDocuments = (props) => {
   const { record, where, documents: propDocuments } = props;
   const [documents, setDocuments] = useState(propDocuments || []);
   const [loading, setLoading] = useState(!propDocuments);
@@ -31,10 +26,10 @@ const ClaimDocuments = (props) => {
       try {
         setLoading(true);
         const response = await api.resourceAction({
-          resourceId: "documents",
+          resourceId: "lend_lyx_documents",
           actionName: "list",
           params: {
-            "filters.claims": record.params.id,
+            "filters.lend_lyx_applications": record.params.id,
           },
         });
 
@@ -232,7 +227,7 @@ const ClaimDocuments = (props) => {
 
       // Filter out 'url' and 'type' fields at the top level
       const filteredEntries = Object.entries(obj).filter(([key]) => {
-        if (currentDepth === 0 && (key === "url" || key === "type")) {
+        if (currentDepth <= 1 && (key === "url" || key === "type")) {
           return false;
         }
         return true;
@@ -390,10 +385,10 @@ const ClaimDocuments = (props) => {
     return {
       id: doc.id,
       params: {
-        file_url: doc.file_url,
+        file_path: doc.file_path,
         file_name: doc.file_name,
         ocr_data: ocrData,
-        document_type: doc.document_type,
+        doc_type: doc.doc_type,
       },
     };
   });
@@ -427,7 +422,7 @@ const ClaimDocuments = (props) => {
             <Box mb="lg" style={{ minWidth: 0, flex: "1 1 auto" }}>
               <Label variant="light">Id</Label>
               <Link
-                href={`/admin/resources/documents/records/${doc.id}/show`}
+                href={`/admin/resources/lend_lyx_documents/records/${doc.id}/show`}
                 style={{
                   display: "block",
                   overflow: "hidden",
@@ -439,7 +434,7 @@ const ClaimDocuments = (props) => {
                 {doc.id}
               </Link>
             </Box>
-            {doc.params.document_type && (
+            {doc.params.doc_type && (
               <Box
                 style={{
                   padding: "4px 12px",
@@ -451,14 +446,24 @@ const ClaimDocuments = (props) => {
                   textTransform: "uppercase",
                 }}
               >
-                {doc.params.document_type.replace(/_/g, " ")}
+                {doc.params.doc_type.replace(/_/g, " ")}
               </Box>
             )}
           </Box>
 
           {/* File URL Display */}
           <Box mb="lg">
-            <FileUrlDisplay record={doc} where={"show"} />
+            <FileUrlDisplay
+              record={doc}
+              property={{
+                props: {
+                  key: "file_path",
+                  name: doc.params.file_name || "Document File",
+                  file: "Document File",
+                },
+              }}
+              where={"show"}
+            />
           </Box>
 
           {/* OCR Data */}
@@ -474,4 +479,4 @@ const ClaimDocuments = (props) => {
   );
 };
 
-export default ClaimDocuments;
+export default LoanDocuments;

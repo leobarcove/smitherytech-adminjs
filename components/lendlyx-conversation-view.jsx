@@ -1,10 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Box, Text, Loader, Icon } from "@adminjs/design-system";
-import { ApiClient, useNotice } from "adminjs";
+import { useNotice } from "adminjs";
 
-const api = new ApiClient();
+import { projectConfig } from "../config/project.js";
 
-const WrsConversationView = (props) => {
+const colorPrimary =
+  projectConfig?.branding?.theme?.colors?.primary100 || "#3040D6";
+
+const LendLyxConversationView = (props) => {
   const { record } = props;
   const sessionId = record?.params?.id;
   const [messages, setMessages] = useState([]);
@@ -31,7 +34,7 @@ const WrsConversationView = (props) => {
   const fetchMessages = async () => {
     try {
       const response = await fetch(
-        `/admin/api/wrs-conversations/${sessionId}/messages`
+        `/admin/api/lendlyx/conversations/${sessionId}/messages`
       );
       const data = await response.json();
 
@@ -56,6 +59,7 @@ const WrsConversationView = (props) => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
     const diffInMs = now - date;
@@ -89,13 +93,8 @@ const WrsConversationView = (props) => {
     }
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      active: "#10B981",
-      completed: "#6B7280",
-      archived: "#9CA3AF",
-    };
-    return colors[status] || "#6B7280";
+  const getStatusColor = (isActive) => {
+    return isActive ? "#10B981" : "#6B7280";
   };
 
   const scrollToBottom = () => {
@@ -145,7 +144,7 @@ const WrsConversationView = (props) => {
                   width: "48px",
                   height: "48px",
                   borderRadius: "50%",
-                  backgroundColor: "#4C6FFF",
+                  backgroundColor: colorPrimary,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -154,13 +153,13 @@ const WrsConversationView = (props) => {
                   fontWeight: "600",
                 }}
               >
-                {session?.telegram_user_id
-                  ? String(session.telegram_user_id).slice(0, 2).toUpperCase()
+                {session?.telegram_user_name
+                  ? session.telegram_user_name.slice(0, 2).toUpperCase()
                   : "U"}
               </Box>
               <Box>
                 <Text fontSize="lg" fontWeight="600" color="grey100">
-                  Telegram User {session?.telegram_user_id || "Unknown"}
+                  {session?.telegram_user_name || "Unknown User"}
                 </Text>
                 <Box
                   flex
@@ -172,20 +171,21 @@ const WrsConversationView = (props) => {
                       width: "8px",
                       height: "8px",
                       borderRadius: "50%",
-                      backgroundColor: getStatusColor(session?.status),
+                      backgroundColor: getStatusColor(session?.is_active),
                     }}
                   />
                   <Text fontSize="sm" color="grey60">
-                    {session?.status || "Unknown"} • {messages.length} messages
+                    {session?.is_active ? "Active" : "Inactive"} &nbsp;•{" "}
+                    {messages.length} messages
                   </Text>
                 </Box>
               </Box>
             </Box>
           </Box>
 
-          {session?.created_at && (
+          {session?.started_at && (
             <Text fontSize="sm" color="grey60">
-              Started {formatDate(session.created_at)}
+              Started {formatDate(session.started_at)}
             </Text>
           )}
         </Box>
@@ -224,70 +224,78 @@ const WrsConversationView = (props) => {
         ) : (
           <Box flex flexDirection="column" style={{ gap: "12px" }}>
             {messages.map((message, index) => {
-              // Use the role field from the message
-              const isBot = message.role === "bot";
+              const isBot =
+                message.role === "assistant" ||
+                message.role === "system" ||
+                message.role === "bot";
+              const isSystem = message.role === "system";
 
               return (
                 <Box
                   key={message.id || index}
                   flex
-                  justifyContent={isBot ? "flex-start" : "flex-end"}
+                  justifyContent={
+                    isSystem ? "center" : isBot ? "flex-start" : "flex-end"
+                  }
                   style={{ width: "100%" }}
                 >
                   <Box
                     style={{
-                      maxWidth: "70%",
-                      backgroundColor: isBot ? "white" : "#4C6FFF",
-                      borderRadius: isBot
+                      maxWidth: isSystem ? "90%" : "70%",
+                      backgroundColor: isSystem
+                        ? "#f3f4f6"
+                        : isBot
+                        ? "white"
+                        : colorPrimary,
+                      borderRadius: isSystem
+                        ? "8px"
+                        : isBot
                         ? "0 16px 16px 16px"
                         : "16px 0 16px 16px",
                       padding: "12px 16px",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                      boxShadow: isSystem
+                        ? "none"
+                        : "0 1px 2px rgba(0,0,0,0.08)",
+                      border: isSystem ? "1px solid #e5e7eb" : "none",
                     }}
                   >
                     {/* Message Content */}
                     <Text
                       style={{
-                        color: isBot ? "#1a1a1a" : "white",
-                        fontSize: "14px",
+                        color: isSystem
+                          ? "#6b7280"
+                          : isBot
+                          ? "#1a1a1a"
+                          : "white",
+                        fontSize: isSystem ? "12px" : "14px",
                         lineHeight: "1.5",
                         wordWrap: "break-word",
                         whiteSpace: "pre-wrap",
+                        textAlign: isSystem ? "center" : "left",
+                        fontStyle: isSystem ? "italic" : "normal",
                       }}
                     >
                       {message.content}
                     </Text>
 
-                    {/* Timestamp */}
-                    <Box
-                      flex
-                      alignItems="center"
-                      justifyContent="flex-end"
-                      style={{ marginTop: "6px", gap: "4px" }}
-                    >
-                      <Text
-                        style={{
-                          color: isBot ? "#9ca3af" : "rgba(255,255,255,0.7)",
-                          fontSize: "11px",
-                        }}
+                    {/* Timestamp relative to message created_at */}
+                    {!isSystem && (
+                      <Box
+                        flex
+                        alignItems="center"
+                        justifyContent="flex-end"
+                        style={{ marginTop: "6px", gap: "4px" }}
                       >
-                        {formatDate(message.created_at)}
-                      </Text>
-
-                      {/* Read receipt for user messages */}
-                      {!isBot && (
-                        <Box style={{ color: "rgba(255,255,255,0.7)" }}>
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 16 16"
-                            fill="currentColor"
-                          >
-                            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" />
-                          </svg>
-                        </Box>
-                      )}
-                    </Box>
+                        <Text
+                          style={{
+                            color: isBot ? "#9ca3af" : "rgba(255,255,255,0.7)",
+                            fontSize: "11px",
+                          }}
+                        >
+                          {formatDate(message.created_at)}
+                        </Text>
+                      </Box>
+                    )}
                   </Box>
                 </Box>
               );
@@ -308,24 +316,24 @@ const WrsConversationView = (props) => {
               width: "48px",
               height: "48px",
               borderRadius: "50%",
-              backgroundColor: "#4C6FFF",
+              backgroundColor: colorPrimary,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(76, 111, 255, 0.4)",
+              boxShadow: "0 4px 12px rgba(139, 92, 246, 0.4)",
               zIndex: 1000,
               transition: "all 0.2s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "scale(1.1)";
               e.currentTarget.style.boxShadow =
-                "0 6px 16px rgba(76, 111, 255, 0.5)";
+                "0 6px 16px rgba(139, 92, 246, 0.5)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "scale(1)";
               e.currentTarget.style.boxShadow =
-                "0 4px 12px rgba(76, 111, 255, 0.4)";
+                "0 4px 12px rgba(139, 92, 246, 0.4)";
             }}
           >
             <svg
@@ -353,7 +361,6 @@ const WrsConversationView = (props) => {
           style={{
             position: "sticky",
             bottom: 0,
-            marginTop: "24px",
           }}
         >
           <Box
@@ -365,9 +372,9 @@ const WrsConversationView = (props) => {
             <Text fontSize="sm" color="grey60">
               Session ID: {session.id}
             </Text>
-            {session.last_message_at && (
+            {session.last_interacted_at && (
               <Text fontSize="sm" color="grey60">
-                Last message: {formatDate(session.last_message_at)}
+                Last message: {formatDate(session.last_interacted_at)}
               </Text>
             )}
           </Box>
@@ -377,4 +384,4 @@ const WrsConversationView = (props) => {
   );
 };
 
-export default WrsConversationView;
+export default LendLyxConversationView;

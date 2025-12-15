@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  DatePicker,
   Input,
   Label,
   Section,
@@ -10,14 +9,16 @@ import {
   Loader,
   Badge,
   Header,
+  TextArea,
 } from "@adminjs/design-system";
 import { ApiClient, useNotice } from "adminjs";
 import { useNavigate } from "react-router-dom";
-import ClaimDocuments from "./claim-documents";
+import LoanDocuments from "./loan-documents";
 
-const ReviewClaim = (props) => {
+const api = new ApiClient();
+
+const ReviewLoan = (props) => {
   const { record, resource } = props;
-  const api = new ApiClient();
   const sendNotice = useNotice();
   const navigate = useNavigate();
 
@@ -25,15 +26,13 @@ const ReviewClaim = (props) => {
   const isFinalized =
     currentStatus === "approved" || currentStatus === "rejected";
 
-  const [claimedAmount, setClaimedAmount] = useState(
-    record.params.claimed_amount || ""
+  const [tenureMonths, setTenureMonths] = useState(
+    record.params.tenure_months || ""
   );
-  const [approvedAmount, setApprovedAmount] = useState(
-    record.params.approved_amount || ""
+  const [interestRate, setInterestRate] = useState(
+    record.params.interest_rate || ""
   );
-  const [paymentDate, setPaymentDate] = useState(
-    record.params.payment_date ? new Date(record.params.payment_date) : null
-  );
+  const [remarks, setRemarks] = useState(record.params.remarks || "");
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [documentsLoading, setDocumentsLoading] = useState(true);
@@ -44,15 +43,32 @@ const ReviewClaim = (props) => {
       try {
         setDocumentsLoading(true);
         const response = await api.resourceAction({
-          resourceId: "documents",
+          resourceId: "lend_lyx_documents",
           actionName: "list",
           params: {
-            "filters.claims": record.params.id,
+            "filters.lend_lyx_applications": record.params.id,
           },
         });
 
         if (response.data && response.data.records) {
-          setDocuments(response.data.records.map((r) => r.params));
+          // Filter documents with non-empty ocr_data
+          const docsWithOcr = response.data.records.map((r) => r.params);
+          // .filter((doc) => {
+          //   if (!doc.ocr_data) return false;
+          //   if (typeof doc.ocr_data === "string") {
+          //     try {
+          //       const parsed = JSON.parse(doc.ocr_data);
+          //       return parsed && Object.keys(parsed).length > 0;
+          //     } catch {
+          //       return doc.ocr_data.trim().length > 0;
+          //     }
+          //   }
+          //   return (
+          //     typeof doc.ocr_data === "object" &&
+          //     Object.keys(doc.ocr_data).length > 0
+          //   );
+          // });
+          setDocuments(docsWithOcr);
         }
       } catch (error) {
         sendNotice({ message: "Error loading documents", type: "error" });
@@ -65,10 +81,19 @@ const ReviewClaim = (props) => {
   }, [record.params.id]);
 
   const handleAction = async (action) => {
+    // Validate required fields
+    if (!remarks || remarks.trim() === "") {
+      sendNotice({
+        message: "Remarks are required",
+        type: "error",
+      });
+      return;
+    }
+
     if (action === "approve") {
-      if (!paymentDate) {
+      if (!tenureMonths || !interestRate) {
         sendNotice({
-          message: "Payment date is required for approval",
+          message: "Tenure months and interest rate are required for approval",
           type: "error",
         });
         return;
@@ -79,13 +104,13 @@ const ReviewClaim = (props) => {
     try {
       const payload = {
         actionType: action,
-        claimed_amount: claimedAmount,
-        approved_amount: approvedAmount,
-        payment_date: paymentDate,
+        tenure_months: tenureMonths,
+        interest_rate: interestRate,
+        remarks: remarks,
       };
 
       const response = await fetch(
-        `/admin/api/insurawiz/claims/${record.id}/review`,
+        `/admin/api/lendlyx/applications/${record.id}/review`,
         {
           method: "POST",
           headers: {
@@ -102,15 +127,15 @@ const ReviewClaim = (props) => {
           message: data.message,
           type: "success",
         });
-        navigate(`/admin/resources/claims`);
+        navigate(`/admin/resources/lend_lyx_applications`);
       } else {
         sendNotice({
-          message: data.error || "Error updating claim",
+          message: data.error || "Error updating loan application",
           type: "error",
         });
       }
     } catch (error) {
-      sendNotice({ message: "Error updating claim", type: "error" });
+      sendNotice({ message: "Error updating loan application", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -118,17 +143,12 @@ const ReviewClaim = (props) => {
 
   const fieldsToDisplay = [
     { label: "ID", value: record.params.id },
-    { label: "Claim Number", value: record.params.claim_number },
-    { label: "Claim Type", value: record.params.claim_type },
-    { label: "Claimant Name", value: record.params.claimant_name },
-    { label: "IC Number", value: record.params.ic_number },
-    { label: "Policy Number", value: record.params.policy_number },
-    { label: "Incident Date", value: record.params.incident_date },
-    { label: "Incident Location", value: record.params.incident_location },
-    {
-      label: "Incident Description",
-      value: record.params.incident_description,
-    },
+    { label: "Reference No", value: record.params.reference_no },
+    { label: "Loan Amount", value: record.params.loan_amount },
+    { label: "Tenure Months", value: record.params.tenure_months },
+    { label: "Interest Rate", value: record.params.interest_rate },
+    { label: "Status", value: record.params.status },
+    { label: "Purpose", value: record.params.loan_purpose },
     { label: "Submission Date", value: record.params.created_at },
   ];
 
@@ -137,7 +157,7 @@ const ReviewClaim = (props) => {
       <Box variant="white" p="xl">
         <Section>
           <Header.H5 style={{ marginBottom: "1.5rem" }}>
-            Claim Information
+            Loan Information
           </Header.H5>
           <Box flex flexWrap="wrap">
             {fieldsToDisplay.map((field, index) => (
@@ -160,7 +180,7 @@ const ReviewClaim = (props) => {
               <Loader />
             </Box>
           ) : (
-            <ClaimDocuments
+            <LoanDocuments
               record={record}
               where="review"
               documents={documents}
@@ -171,7 +191,7 @@ const ReviewClaim = (props) => {
         {isFinalized ? (
           <Section mt="xl">
             <Header.H5 style={{ marginBottom: "1.5rem" }}>
-              Claim Status
+              Loan Status
             </Header.H5>
             <Box>
               <Badge
@@ -181,16 +201,20 @@ const ReviewClaim = (props) => {
                 {currentStatus.toUpperCase()}
               </Badge>
               <Text mt="default" color="grey60">
-                This claim has already been {currentStatus}.
+                This application has already been {currentStatus}.
               </Text>
               {currentStatus === "approved" && (
                 <Box mt="lg">
-                  <Label>Approved Amount</Label>
-                  <Text>{record.params.approved_amount || "-"}</Text>
-                  <Label mt="default">Payment Date</Label>
-                  <Text>{record.params.payment_date || "-"}</Text>
-                  <Label mt="default">Approval Date</Label>
-                  <Text>{record.params.approval_date || "-"}</Text>
+                  <Label>Tenure Months</Label>
+                  <Text>{record.params.tenure_months || "-"}</Text>
+                  <Label mt="default">Interest Rate</Label>
+                  <Text>{record.params.interest_rate || "-"}</Text>
+                </Box>
+              )}
+              {currentStatus === "rejected" && (
+                <Box mt="lg">
+                  <Label>Remarks</Label>
+                  <Text>{record.params.remarks || "-"}</Text>
                 </Box>
               )}
             </Box>
@@ -199,28 +223,34 @@ const ReviewClaim = (props) => {
           <>
             <Box width={1 / 2}>
               <Box my="xl">
-                <Label>Claimed Amount</Label>
+                <Label>Tenure Months (Required for Approval)</Label>
                 <Input
                   width="100%"
-                  value={claimedAmount}
-                  onChange={(e) => setClaimedAmount(e.target.value)}
+                  value={tenureMonths}
+                  onChange={(e) => setTenureMonths(e.target.value)}
                   type="number"
+                  placeholder="Enter tenure in months"
                 />
               </Box>
               <Box mb="xl">
-                <Label>Approved Amount (Required for Approval)</Label>
+                <Label>Interest Rate (Required for Approval)</Label>
                 <Input
                   width="100%"
-                  value={approvedAmount}
-                  onChange={(e) => setApprovedAmount(e.target.value)}
+                  value={interestRate}
+                  onChange={(e) => setInterestRate(e.target.value)}
                   type="number"
+                  step="0.01"
+                  placeholder="Enter interest rate"
                 />
               </Box>
               <Box mb="xl">
-                <Label>Payment Date (Required for Approval)</Label>
-                <DatePicker
-                  value={paymentDate}
-                  onChange={(date) => setPaymentDate(date)}
+                <Label>Remarks (Required)</Label>
+                <TextArea
+                  width="100%"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="Enter remarks"
+                  rows={4}
                 />
               </Box>
             </Box>
@@ -248,4 +278,4 @@ const ReviewClaim = (props) => {
   );
 };
 
-export default ReviewClaim;
+export default ReviewLoan;
