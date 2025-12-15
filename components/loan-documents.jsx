@@ -3,6 +3,11 @@ import { Box, Header, Label, Link, Loader, Text } from "@adminjs/design-system";
 import { ApiClient } from "adminjs";
 import FileUrlDisplay from "./file-url-display";
 
+import { projectConfig } from "../config/project.js";
+
+const colorPrimary =
+  projectConfig?.branding?.theme?.colors?.primary100 || "#3040D6";
+
 const api = new ApiClient();
 
 const LoanDocuments = (props) => {
