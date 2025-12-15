@@ -521,7 +521,8 @@ const start = async () => {
         if (newStart < todayMidnight) {
           return res.status(400).json({
             success: false,
-            error: "Appointments can only be rescheduled for today or future dates.",
+            error:
+              "Appointments can only be rescheduled for today or future dates.",
           });
         }
 
@@ -587,6 +588,9 @@ const start = async () => {
       // Fetch appointments from database
       const appointments = await prisma.slotiva_appointments.findMany({
         where,
+        include: {
+          slotiva_service_type: true,
+        },
         orderBy: {
           start_time: "asc",
         },
@@ -606,10 +610,16 @@ const start = async () => {
           border: "#4B5563",
         };
 
+        // Get service type name from relation or fallback to old field
+        const serviceTypeName =
+          appointment.slotiva_service_type?.name ||
+          appointment.service_type ||
+          "";
+
         return {
           id: appointment.id,
           title: `${appointment.client_name}${
-            appointment.service_type ? ` - ${appointment.service_type}` : ""
+            serviceTypeName ? ` - ${serviceTypeName}` : ""
           }`,
           start: appointment.start_time,
           end: appointment.end_time,
@@ -620,7 +630,7 @@ const start = async () => {
             clientName: appointment.client_name,
             phone: appointment.phone,
             email: appointment.email,
-            serviceType: appointment.service_type,
+            serviceType: serviceTypeName,
             status: appointment.status,
             notes: appointment.notes,
             calendarEventId: appointment.calendar_event_id,

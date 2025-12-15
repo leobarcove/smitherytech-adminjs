@@ -45,6 +45,10 @@ const Components = {
     "AppointmentDetails",
     path.resolve("./components/appointment-details.jsx")
   ),
+  ServiceTypeDisplay: componentLoader.add(
+    "ServiceTypeDisplay",
+    path.resolve("./components/service-type-display.jsx")
+  ),
 };
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -787,11 +791,30 @@ const adminOptions = {
             },
           },
           service_type: {
+            // components: {
+            //   list: Components.ServiceTypeDisplay,
+            // },
             isVisible: {
               list: true,
               filter: true,
               show: false,
               edit: true,
+            },
+          },
+          service_type_id: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: true,
+            },
+          },
+          slotiva_service_type: {
+            isVisible: {
+              list: false,
+              filter: false,
+              show: false,
+              edit: false,
             },
           },
           start_time: {
@@ -887,6 +910,46 @@ const adminOptions = {
           },
         },
         actions: {
+          list: {
+            after: async (response, request, context) => {
+              // If we have records, include the relation
+              if (response && response.records && response.records.length > 0) {
+                // Update records with relation data
+                response.records = response.records.map((record) => {
+                  const serviceType = record.populated.slotiva_service_type;
+                  if (
+                    serviceType &&
+                    serviceType.params &&
+                    serviceType.params.name
+                  ) {
+                    record.params.service_type = serviceType.params.name;
+                  }
+                  return record;
+                });
+              }
+
+              return response;
+            },
+          },
+          show: {
+            after: async (response, request, context) => {
+              // Include the relation for the show view
+              if (response && response.record) {
+                let record = response.record;
+                const serviceType = record.populated.slotiva_service_type;
+                if (
+                  serviceType &&
+                  serviceType.params &&
+                  serviceType.params.name
+                ) {
+                  record.params.service_type = serviceType.params.name;
+                }
+                response.record = record;
+              }
+
+              return response;
+            },
+          },
           new: {
             before: async (request, context) => {
               // Auto-generate booking_id if not provided
@@ -923,12 +986,7 @@ const adminOptions = {
           name: "Slotiva",
           icon: "List",
         },
-        listProperties: [
-          "name",
-          "duration_minutes",
-          "is_active",
-          "created_at",
-        ],
+        listProperties: ["name", "duration_minutes", "is_active", "created_at"],
         properties: {
           name: {
             isTitle: true,

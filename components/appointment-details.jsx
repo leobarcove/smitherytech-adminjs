@@ -105,10 +105,10 @@ const AppointmentDetails = (props) => {
               params.status === "confirmed"
                 ? "success"
                 : params.status === "cancelled"
-                ? "danger"
-                : params.status === "completed"
-                ? "info"
-                : "warning"
+                  ? "danger"
+                  : params.status === "completed"
+                    ? "info"
+                    : "warning"
             }
             style={{
               fontSize: "13px",
@@ -193,7 +193,7 @@ const AppointmentDetails = (props) => {
               Service Type
             </Label>
             <Text fontSize="md" fontWeight="500" color="grey100">
-              {params.service_type || "N/A"}
+              {params.slotiva_service_types?.name || params.service_type || "N/A"}
             </Text>
           </Box>
           <Box>

@@ -484,7 +484,7 @@ model slotiva_appointments {
   client_name        String               @db.VarChar(255)
   phone              String?              @db.VarChar(20)
   email              String?              @db.VarChar(255)
-  service_type       String?              @db.VarChar(100)
+  service_type_id    String?              @db.Uuid
   start_time         DateTime             @db.Timestamptz(6)
   end_time           DateTime             @db.Timestamptz(6)
   status             String               @default("confirmed") @db.VarChar(20)
@@ -496,12 +496,14 @@ model slotiva_appointments {
   updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
   created_by         String?              @db.VarChar(50)
   slotiva_audit_logs slotiva_audit_logs[]
+  slotiva_service_type slotiva_service_types? @relation(fields: [service_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([start_time], map: "idx_slotiva_appointments_start_time")
   @@index([status], map: "idx_slotiva_appointments_status")
   @@index([email], map: "idx_slotiva_appointments_email")
   @@index([phone], map: "idx_slotiva_appointments_phone")
   @@index([booking_id], map: "idx_slotiva_appointments_booking_id")
+  @@index([service_type_id], map: "idx_slotiva_appointments_service_type_id")
   @@map("slotiva_appointments")
 }
 
@@ -556,13 +558,14 @@ model slotiva_audit_logs {
 }
 
 model slotiva_service_types {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name             String   @unique @db.VarChar(255)
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String                  @unique @db.VarChar(255)
   description      String?
-  duration_minutes Int      @default(60)
-  is_active        Boolean  @default(true)
-  created_at       DateTime @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  duration_minutes Int                     @default(60)
+  is_active        Boolean                 @default(true)
+  created_at       DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                @default(now()) @updatedAt @db.Timestamptz(6)
+  slotiva_appointments slotiva_appointments[]
 
   @@map("slotiva_service_types")
 }
