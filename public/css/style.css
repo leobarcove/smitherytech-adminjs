@@ -43,6 +43,7 @@ div.adminjs_Select > div[class*="control"] {
 }
 
 a.adminjs_active {
+  font-weight: 500 !important;
   border-left: 4px solid #888 !important;
   background-color: #f5f5f5 !important;
 }
@@ -53,4 +54,14 @@ a.adminjs_active span.adminjs_Icon > svg {
 
 a.adminjs_active:hover span.adminjs_Icon > svg {
   transform: scale(1.1);
+}
+
+a.adminjs_active > div {
+  font-weight: 500;
+}
+
+[data-css="sidebar-resources"] .adminjs_Label + ul > li > a.adminjs_Box + ul {
+  height: 0;
+  overflow: hidden;
+  transition: height 0.3s ease-in-out !important;
 }

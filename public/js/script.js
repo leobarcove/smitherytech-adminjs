@@ -21,7 +21,43 @@ function setCurrentModule() {
   }
 }
 
+function setSubmenuHeight(menu) {
+  const submenu = menu.parentElement.querySelector("ul");
+  const height = submenu?.scrollHeight;
+  if (!submenu && !height) {
+    return;
+  }
+
+  // expand submenu
+  submenu.style.height = height + "px";
+  setTimeout(() => {
+    submenu.style.overflow = "visible";
+  }, 500);
+}
+
+function initSubmenu() {
+  const menus = document.querySelectorAll(
+    `[data-css="sidebar-resources"] .adminjs_Label + ul > li > a.adminjs_Box`
+  );
+
+  menus.forEach((menu) => {
+    menu.addEventListener(
+      "click",
+      (e) => {
+        setTimeout(() => {
+          setSubmenuHeight(menu);
+        });
+      },
+      0
+    );
+
+    // initial expand
+    setSubmenuHeight(menu);
+  });
+}
+
 window.onload = function () {
+  initSubmenu();
   setCurrentModule();
 };
 

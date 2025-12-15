@@ -5,7 +5,7 @@ export const projectConfig = {
   },
   branding: {
     companyName: "SmitheryTech Admin",
-    logo: "../../images/logo.png",
+    logo: "/images/logo.png",
     softwareBrothers: false,
     withMadeWithLove: false,
     theme: {
