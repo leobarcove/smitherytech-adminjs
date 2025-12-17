@@ -16,7 +16,7 @@ export const projectConfig = {
   },
   modules: {
     insurawiz: true,
-    wrspro: true,
+    // wrspro: true,
     slotiva: true,
     lendlyx: true,
     system: true,
