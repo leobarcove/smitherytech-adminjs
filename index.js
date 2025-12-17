@@ -261,6 +261,33 @@ const start = async () => {
   );
 
   app.put(
+    "/admin/api/slotiva/appointments/:appointmentId/complete",
+    async (req, res) => {
+      try {
+        const { appointmentId } = req.params;
+
+        const appointment = await prisma.slotiva_appointments.update({
+          where: { id: appointmentId },
+          data: {
+            status: "completed",
+          },
+        });
+
+        res.json({
+          success: true,
+          appointment,
+        });
+      } catch (error) {
+        console.error("Error completing slotiva appointment:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to complete appointment",
+        });
+      }
+    }
+  );
+
+  app.put(
     "/admin/api/slotiva/appointments/:appointmentId",
     async (req, res) => {
       try {

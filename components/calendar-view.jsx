@@ -123,6 +123,12 @@ const CalendarView = (props) => {
 
     const start = new Date(`${rescheduleDate}T${rescheduleTime}`);
     const end = new Date(start.getTime() + rescheduleDuration * 60000);
+    const now = new Date();
+
+    if (start < now) {
+      setAvailabilityStatus("past");
+      return;
+    }
 
     const hasConflict = events.some((event) => {
       if (event.id === selectedEvent.id) return false; // Ignore current event
@@ -143,8 +149,7 @@ const CalendarView = (props) => {
       const newEnd = new Date(newStart.getTime() + rescheduleDuration * 60000);
 
       const response = await fetch(
-        `/admin/api/slotiva/appointments/${
-          selectedEvent.id || selectedEvent.bookingId
+        `/admin/api/slotiva/appointments/${selectedEvent.id || selectedEvent.bookingId
         }`,
         {
           method: "PUT",
@@ -194,8 +199,7 @@ const CalendarView = (props) => {
 
     try {
       const response = await fetch(
-        `/admin/api/slotiva/appointments/${
-          selectedEvent.id || selectedEvent.bookingId
+        `/admin/api/slotiva/appointments/${selectedEvent.id || selectedEvent.bookingId
         }/cancel`,
         {
           method: "PUT",
@@ -224,6 +228,45 @@ const CalendarView = (props) => {
       console.error("Error cancelling appointment:", error);
       addNotice({
         message: "Error cancelling appointment",
+        type: "error",
+      });
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      const response = await fetch(
+        `/admin/api/slotiva/appointments/${selectedEvent.id || selectedEvent.bookingId
+        }/complete`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        addNotice({
+          message: "Appointment marked as completed",
+          type: "success",
+        });
+        setShowModal(false);
+        fetchAppointments(); // Refresh the calendar
+      } else {
+        addNotice({
+          message: data.message || "Failed to complete appointment",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error completing appointment:", error);
+      addNotice({
+        message: "Error completing appointment",
         type: "error",
       });
     }
@@ -579,6 +622,16 @@ const CalendarView = (props) => {
                 Cancel
               </Button>
               <Button
+                onClick={handleComplete}
+                variant="success"
+                disabled={
+                  selectedEvent?.status === "cancelled" ||
+                  selectedEvent?.status === "completed"
+                }
+              >
+                Complete
+              </Button>
+              <Button
                 onClick={handleRescheduleClick}
                 variant="primary"
                 disabled={
@@ -624,6 +677,7 @@ const CalendarView = (props) => {
                 <Label required>New Date</Label>
                 <Input
                   type="date"
+                  min={new Date().toLocaleDateString('en-CA')}
                   value={rescheduleDate}
                   onChange={(e) => setRescheduleDate(e.target.value)}
                   width="100%"
@@ -659,9 +713,8 @@ const CalendarView = (props) => {
                   }
                   style={{
                     borderRadius: "4px",
-                    border: `1px solid ${
-                      availabilityStatus === "available" ? "#10B981" : "#EF4444"
-                    }`,
+                    border: `1px solid ${availabilityStatus === "available" ? "#10B981" : "#EF4444"
+                      }`,
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
@@ -688,7 +741,9 @@ const CalendarView = (props) => {
                   >
                     {availabilityStatus === "available"
                       ? "✓ Slot is available"
-                      : "⚠ Conflict: Slot is not available"}
+                      : availabilityStatus === "past"
+                        ? "⚠ Error: Cannot select past time"
+                        : "⚠ Conflict: Slot is not available"}
                   </Text>
                 </Box>
               )}
@@ -709,7 +764,7 @@ const CalendarView = (props) => {
                 onClick={confirmReschedule}
                 variant="primary"
                 disabled={
-                  !availabilityStatus || availabilityStatus === "conflict"
+                  !availabilityStatus || availabilityStatus !== "available"
                 }
               >
                 Confirm Reschedule
