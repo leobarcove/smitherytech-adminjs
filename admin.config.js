@@ -81,6 +81,9 @@ const adminOptions = {
           lend_lyx_audit_logs: "Audit Logs",
           lend_lyx_compliance: "Compliance",
           lend_lyx_chat_sessions: "Chat Sessions",
+          //Slotiva
+          slotiva_appointments: "Appointments",
+          slotiva_service_types: "Service Types",
         },
       },
     },
