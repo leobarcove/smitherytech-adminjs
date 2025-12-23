@@ -19,6 +19,36 @@ export const createLendLyxResources = (
         icon: "DollarSign",
       },
       listProperties: ["id", "full_name", "ic_number", "status", "created_at"],
+      properties: {
+        date_of_birth: {
+          type: "date",
+        },
+        status: {
+          type: "select",
+          availableValues: [
+            { value: "pending", label: "Pending" },
+            { value: "verified", label: "Verified" },
+            { value: "failed", label: "Failed" },
+            { value: "manual_review", label: "Manual Review" },
+          ],
+        },
+        lend_lyx_applications: {
+          isVisible: {
+            list: false,
+            filter: false,
+            show: true,
+            edit: false,
+          },
+        },
+        application_id: {
+          isVisible: {
+            list: false,
+            filter: false,
+            show: false,
+            edit: false,
+          },
+        },
+      },
     },
   },
   {
@@ -46,13 +76,77 @@ export const createLendLyxResources = (
             list: Components.FileUrlDisplay,
             show: Components.FileUrlDisplay,
           },
+          isVisible: {
+            list: true,
+            filter: false,
+            show: true,
+            edit: true,
+          },
           props: {
             key: "file_path",
             name: "File",
             file: "File",
+            disabled: true,
           },
         },
+        file_name: {
+          isVisible: {
+            list: true,
+            filter: true,
+            show: true,
+            edit: true,
+          },
+          props: {
+            disabled: true,
+          },
+        },
+        file_size: {
+          isVisible: {
+            list: false,
+            filter: false,
+            show: true,
+            edit: true,
+          },
+          props: {
+            disabled: true,
+          },
+        },
+        doc_type: {
+          isVisible: {
+            list: true,
+            filter: true,
+            show: true,
+            edit: true,
+          },
+          props: {
+            disabled: true,
+          },
+        },
+        status: {
+          type: "select",
+          availableValues: [
+            { value: "pending", label: "Pending" },
+            { value: "verified", label: "Verified" },
+            { value: "failed", label: "Failed" },
+          ],
+        },
         ocr_data: {
+          isVisible: {
+            list: false,
+            filter: false,
+            show: false,
+            edit: false,
+          },
+        },
+        lend_lyx_applications: {
+          isVisible: {
+            list: false,
+            filter: false,
+            show: true,
+            edit: false,
+          },
+        },
+        application_id: {
           isVisible: {
             list: false,
             filter: false,
@@ -146,6 +240,15 @@ export const createLendLyxResources = (
         "status",
         "created_at",
       ],
+      properties: {
+        status: {
+          type: "select",
+          availableValues: [
+            { value: "approved", label: "Approved" },
+            { value: "rejected", label: "Rejected" },
+          ],
+        },
+      },
       actions: {
         reviewLoan: {
           actionType: "record",
