@@ -1,6 +1,13 @@
 /**
  * Slotiva Resources Configuration
  */
+
+export const BUSINESS_HOURS = {
+  startHour: 9,
+  endHour: 18,
+  days: [1, 2, 3, 4, 5, 6], // Mon (1) - Sat (6)
+};
+
 export const createSlotivaResources = (
   prisma,
   dmmf,
@@ -80,15 +87,20 @@ export const createSlotivaResources = (
           // },
           isVisible: {
             list: true,
-            filter: true,
+            filter: false,
             show: false,
-            edit: true,
+            edit: false,
           },
         },
         service_type_id: {
+          // reference: "slotiva_service_types",
+          components: {
+            edit: Components.ServiceTypeSelect,
+            filter: Components.ServiceTypeSelect,
+          },
           isVisible: {
             list: false,
-            filter: false,
+            filter: true,
             show: false,
             edit: true,
           },
@@ -102,6 +114,13 @@ export const createSlotivaResources = (
           },
         },
         start_time: {
+          components: {
+            edit: Components.FutureDatePicker,
+          },
+          custom: {
+            businessHours: BUSINESS_HOURS,
+            name: "Start Time",
+          },
           isVisible: {
             list: true,
             filter: true,
@@ -110,6 +129,13 @@ export const createSlotivaResources = (
           },
         },
         end_time: {
+          components: {
+            edit: Components.FutureDatePicker,
+          },
+          custom: {
+            businessHours: BUSINESS_HOURS,
+            name: "End Time",
+          },
           isVisible: {
             list: false,
             filter: true,

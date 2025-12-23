@@ -363,6 +363,36 @@ const start = async () => {
   );
 
   // API endpoint to fetch Slotiva appointments for calendar view
+  app.get("/admin/api/slotiva/service-types", async (req, res) => {
+    try {
+      const serviceTypes = await prisma.slotiva_service_types.findMany({
+        where: {
+          is_active: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          duration_minutes: true,
+        },
+      });
+
+      res.json({
+        success: true,
+        serviceTypes,
+      });
+    } catch (error) {
+      console.error("Error fetching service types:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch service types",
+      });
+    }
+  });
+
   app.get("/admin/api/slotiva/appointments", async (req, res) => {
     console.log("fetching slotiva appointments");
     try {

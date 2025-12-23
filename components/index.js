@@ -58,6 +58,14 @@ const Components = {
     "LoanDocuments",
     path.resolve("./components/loan-documents.jsx")
   ),
+  ServiceTypeSelect: componentLoader.add(
+    "ServiceTypeSelect",
+    path.resolve("./components/service-type-select.jsx")
+  ),
+  FutureDatePicker: componentLoader.add(
+    "FutureDatePicker",
+    path.resolve("./components/future-date-picker.jsx")
+  ),
 };
 
 export { componentLoader, Components };
