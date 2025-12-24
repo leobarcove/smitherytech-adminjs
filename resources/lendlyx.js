@@ -234,6 +234,8 @@ export const createLendLyxResources = (
       listProperties: [
         "id",
         "reference_no",
+        "applicant_name",
+        "applicant_ic_number",
         "loan_amount",
         "tenure_months",
         "interest_rate",
@@ -241,6 +243,22 @@ export const createLendLyxResources = (
         "created_at",
       ],
       properties: {
+        applicant_name: {
+          isVisible: {
+            list: true,
+            filter: false,
+            show: false,
+            edit: false,
+          },
+        },
+        // applicant_ic_number: {
+        //   isVisible: {
+        //     list: true,
+        //     filter: false,
+        //     show: false,
+        //     edit: false,
+        //   },
+        // },
         status: {
           type: "select",
           availableValues: [
@@ -250,6 +268,48 @@ export const createLendLyxResources = (
         },
       },
       actions: {
+        list: {
+          after: async (response) => {
+            if (!response?.records?.length) return response;
+
+            console.log(JSON.stringify(response.records, null, 2));
+
+            const applicationIds = response.records
+              .map((r) => r?.params?.id)
+              .filter(Boolean);
+
+            if (applicationIds.length === 0) return response;
+
+            const applicants = await prisma.lend_lyx_applicants.findFirst({
+              where: {
+                application_id: applicationIds[0],
+              },
+              select: {
+                application_id: true,
+                full_name: true,
+                ic_number: true,
+              },
+            });
+
+            response.records = response.records.map((record) => {
+              const appId = record?.params?.id;
+              const a = appId ? applicants : null;
+              if (a) {
+                record.params.applicant_name = a.full_name || "";
+                record.params.applicant_ic_number = a.ic_number || "";
+              } else {
+                record.params.applicant_name = "";
+                record.params.applicant_ic_number = "";
+              }
+              return record;
+            });
+
+            return response;
+          },
+        },
+        show: {
+          component: Components.LendLyxApplicationDetails,
+        },
         reviewLoan: {
           actionType: "record",
           icon: "FileText",

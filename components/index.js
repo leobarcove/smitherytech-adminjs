@@ -54,6 +54,10 @@ const Components = {
     "ReviewLoan",
     path.resolve("./components/review-loan.jsx")
   ),
+  LendLyxApplicationDetails: componentLoader.add(
+    "LendLyxApplicationDetails",
+    path.resolve("./components/lendlyx-application-details.jsx")
+  ),
   LoanDocuments: componentLoader.add(
     "LoanDocuments",
     path.resolve("./components/loan-documents.jsx")
