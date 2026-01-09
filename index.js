@@ -474,6 +474,298 @@ const start = async () => {
     }
   });
 
+  // Vistate API Endpoints
+
+  app.get("/admin/api/vistate/appointments", async (req, res) => {
+    console.log("fetching vistate appointments");
+    try {
+      // Fetch appointments from database (fetch all for now for simplicity, or add date filter if needed)
+      // Standard FullCalendar fetches often don't pass start/end if configured simply, but good to handle if they do.
+      const appointments = await prisma.vistate_viewing_appointments.findMany({
+        include: {
+          vistate_properties: true,
+          vistate_clients: true,
+          vistate_agents: true,
+        },
+        orderBy: {
+          scheduled_datetime: "asc",
+        },
+      });
+
+      // Transform appointments to FullCalendar event format
+      const events = appointments.map((appointment) => {
+        // Determine color based on status
+        const statusColors = {
+          confirmed: { bg: "#10B981", border: "#059669" },
+          cancelled: { bg: "#EF4444", border: "#DC2626" },
+          completed: { bg: "#3B82F6", border: "#2563EB" },
+          pending: { bg: "#F59E0B", border: "#D97706" },
+          no_show: { bg: "#9CA3AF", border: "#4B5563" },
+        };
+        const colors = statusColors[appointment.status] || {
+          bg: "#6B7280",
+          border: "#4B5563",
+        };
+
+        const startTime = new Date(appointment.scheduled_datetime);
+        const endTime = new Date(startTime.getTime() + (appointment.duration_minutes || 30) * 60000);
+
+        return {
+          id: appointment.id,
+          title: `${appointment.vistate_clients?.name || 'Unknown'} - ${appointment.vistate_properties?.title || 'Unknown Property'}`,
+          start: startTime,
+          end: endTime,
+          backgroundColor: colors.bg,
+          borderColor: colors.border,
+          extendedProps: {
+            bookingReference: appointment.booking_reference,
+            clientName: appointment.vistate_clients?.name,
+            propertyTitle: appointment.vistate_properties?.title,
+            propertyAddress: appointment.vistate_properties?.address,
+            agentName: appointment.vistate_agents?.name,
+            agentId: appointment.agent_id,
+            status: appointment.status,
+            notes: appointment.notes,
+          },
+        };
+      });
+
+      res.json({
+        success: true,
+        appointments: events,
+      });
+    } catch (error) {
+      console.error("Error fetching Vistate appointments:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch appointments",
+      });
+    }
+  });
+
+  app.put("/admin/api/vistate/appointments/:appointmentId", async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const { scheduled_datetime } = req.body;
+
+      if (!scheduled_datetime) {
+          return res.status(400).json({ success: false, error: "Scheduled datetime is required" });
+      }
+
+      const newStart = new Date(scheduled_datetime);
+      if (isNaN(newStart.getTime())) {
+         return res.status(400).json({ success: false, error: "Invalid date format" });
+      }
+      
+      // Update
+      const appointment = await prisma.vistate_viewing_appointments.update({
+        where: { id: appointmentId },
+        data: {
+          scheduled_datetime: newStart,
+        },
+      });
+
+      res.json({
+        success: true,
+        appointment,
+      });
+    } catch (error) {
+      console.error("Error updating Vistate appointment:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update appointment",
+      });
+    }
+  });
+
+  app.put("/admin/api/vistate/appointments/:appointmentId/cancel", async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+
+      const appointment = await prisma.vistate_viewing_appointments.update({
+        where: { id: appointmentId },
+        data: {
+          status: "cancelled",
+        },
+      });
+
+      res.json({
+        success: true,
+        appointment,
+      });
+    } catch (error) {
+      console.error("Error canceling Vistate appointment:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to cancel appointment",
+      });
+    }
+  });
+
+  app.put("/admin/api/vistate/appointments/:appointmentId/complete", async (req, res) => {
+    try {
+        const { appointmentId } = req.params;
+  
+        const appointment = await prisma.vistate_viewing_appointments.update({
+          where: { id: appointmentId },
+          data: {
+            status: "completed",
+          },
+        });
+  
+        res.json({
+          success: true,
+          appointment,
+        });
+      } catch (error) {
+        console.error("Error completing Vistate appointment:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to complete appointment",
+        });
+      }
+  });
+
+  app.get("/admin/api/vistate/agents", async (req, res) => {
+    try {
+      const agents = await prisma.vistate_agents.findMany({
+        where: { is_active: true },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      });
+
+      res.json({
+        success: true,
+        agents,
+      });
+    } catch (error) {
+      console.error("Error fetching Vistate agents:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch agents",
+      });
+    }
+  });
+
+  app.put("/admin/api/vistate/appointments/:appointmentId/reassign", async (req, res) => {
+    try {
+      const { appointmentId } = req.params;
+      const { agentId } = req.body;
+
+      if (!agentId) {
+        return res.status(400).json({
+          success: false,
+          error: "Agent ID is required",
+        });
+      }
+
+      // Verify agent exists and is active
+      const agent = await prisma.vistate_agents.findUnique({
+        where: { id: agentId },
+      });
+
+      if (!agent || !agent.is_active) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid or inactive agent",
+        });
+      }
+
+      const appointment = await prisma.vistate_viewing_appointments.update({
+        where: { id: appointmentId },
+        data: {
+          agent_id: agentId,
+        },
+      });
+
+      res.json({
+        success: true,
+        appointment,
+      });
+    } catch (error) {
+      console.error("Error reassigning Vistate appointment:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to reassign appointment",
+      });
+    }
+  });
+
+  // Vistate Conversation Messages Endpoint
+  app.get(
+    "/admin/api/vistate/conversations/:sessionId/messages",
+    async (req, res) => {
+      try {
+        const { sessionId } = req.params;
+
+        // Fetch messages for this session
+        const messages = await prisma.vistate_communication_log.findMany({
+          where: { session_id: sessionId },
+          orderBy: { created_at: "asc" },
+          include: {
+            vistate_clients: {
+              select: {
+                name: true,
+                phone: true,
+                email: true,
+              },
+            },
+          },
+        });
+
+        if (messages.length === 0) {
+          return res.status(404).json({
+            success: false,
+            error: "Conversation session not found",
+          });
+        }
+
+        // Build session summary from messages
+        const firstMessage = messages[0];
+        const lastMessage = messages[messages.length - 1];
+        const client = firstMessage.vistate_clients;
+
+        const session = {
+          session_id: sessionId,
+          client_name: client?.name || "Unknown Client",
+          client_phone: client?.phone || null,
+          client_email: client?.email || null,
+          channel: firstMessage.channel,
+          last_interaction_at: lastMessage.created_at,
+          message_count: messages.length,
+        };
+
+        // Map messages to standard format
+        const formattedMessages = messages.map((msg) => ({
+          id: msg.id,
+          direction: msg.direction,
+          message_type: msg.message_type,
+          content: msg.content,
+          channel: msg.channel,
+          created_at: msg.created_at,
+          delivered_at: msg.delivered_at,
+          read_at: msg.read_at,
+          failed: msg.failed,
+          error_message: msg.error_message,
+          ai_intent: msg.ai_intent,
+          ai_confidence: msg.ai_confidence ? parseFloat(msg.ai_confidence) : null,
+        }));
+
+        res.json({
+          success: true,
+          session,
+          messages: formattedMessages,
+        });
+      } catch (error) {
+        console.error("Error fetching Vistate conversation messages:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to fetch messages",
+        });
+      }
+    }
+  );
+
   app.get(
     "/admin/api/lendlyx/conversations/:sessionId/messages",
     async (req, res) => {
@@ -606,6 +898,51 @@ const start = async () => {
         res.status(500).json({
           success: false,
           error: "Failed to update loan application status",
+        });
+      }
+    }
+  );
+
+  app.get(
+    "/admin/api/lendlyx/applications/:applicationId/applicants",
+    async (req, res) => {
+      try {
+        const { applicationId } = req.params;
+
+        const applicants = await prisma.lend_lyx_applicants.findMany({
+          where: { application_id: applicationId },
+          orderBy: { created_at: "asc" },
+          select: {
+            id: true,
+            application_id: true,
+            session_id: true,
+            full_name: true,
+            ic_number: true,
+            date_of_birth: true,
+            email: true,
+            phone: true,
+            marital_status: true,
+            tin_no: true,
+            citizenship: true,
+            address: true,
+            city: true,
+            state: true,
+            postcode: true,
+            status: true,
+            created_at: true,
+            updated_at: true,
+          },
+        });
+
+        res.json({
+          success: true,
+          applicants,
+        });
+      } catch (error) {
+        console.error("Error fetching LendLyx application applicants:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to fetch applicants",
         });
       }
     }

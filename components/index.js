@@ -70,6 +70,26 @@ const Components = {
     "FutureDatePicker",
     path.resolve("./components/future-date-picker.jsx")
   ),
+  VistateCalendarView: componentLoader.add(
+    "VistateCalendarView",
+    path.resolve("./components/vistate-calendar-view.jsx")
+  ),
+  WorkingHoursEditor: componentLoader.add(
+    "WorkingHoursEditor",
+    path.resolve("./components/working-hours-editor.jsx")
+  ),
+  VistateReassignViewing: componentLoader.add(
+    "VistateReassignViewing",
+    path.resolve("./components/vistate-reassign-viewing.jsx")
+  ),
+  TelegramRegistrationLink: componentLoader.add(
+    "TelegramRegistrationLink",
+    path.resolve("./components/telegram-registration-link.jsx")
+  ),
+  VistateConversationView: componentLoader.add(
+    "VistateConversationView",
+    path.resolve("./components/vistate-conversation-view.jsx")
+  ),
 };
 
 export { componentLoader, Components };

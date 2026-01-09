@@ -20,5 +20,6 @@ export const projectConfig = {
     slotiva: true,
     lendlyx: true,
     system: true,
+    vistate: true,
   },
 };

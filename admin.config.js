@@ -11,6 +11,7 @@ import { createInsuraWizResources } from "./resources/insurawiz.js";
 import { createWrsProResources } from "./resources/wrspro.js";
 import { createSlotivaResources } from "./resources/slotiva.js";
 import { createLendLyxResources } from "./resources/lendlyx.js";
+import { createVistateResources } from "./resources/vistate.js";
 import { createSystemResources } from "./resources/system.js";
 
 AdminJS.registerAdapter({ Database, Resource });
@@ -25,6 +26,7 @@ const buildResources = () => {
     wrspro: createWrsProResources,
     slotiva: createSlotivaResources,
     lendlyx: createLendLyxResources,
+    vistate: createVistateResources,
     system: createSystemResources,
   };
 
@@ -84,6 +86,14 @@ const adminOptions = {
           //Slotiva
           slotiva_appointments: "Appointments",
           slotiva_service_types: "Service Types",
+          // Vistate
+          vistate_viewing_appointments: "Viewings",
+          vistate_properties: "Properties",
+          vistate_agents: "Agents",
+          vistate_clients: "Clients",
+          vistate_property_types: "Property Types",
+          vistate_property_availability_blocks: "Property Availability Blocks",
+          vistate_communication_log: "Conversations",
         },
       },
     },
